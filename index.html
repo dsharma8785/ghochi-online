@@ -562,6 +562,10 @@ window.hostStartGame=async function(){
 
 // ── RENDER GAME ──
 function renderGame(state){
+  // Normalize turnOrder: Firebase returns stored arrays as {0:v,1:v,...} objects
+  if(state.turnOrder && !Array.isArray(state.turnOrder)){
+    state.turnOrder=Object.keys(state.turnOrder).sort().map(k=>state.turnOrder[k]);
+  }
   const round=state.round||1;
   document.getElementById("game-round-label").textContent=`Round ${round} / ${state.maxRounds||13}`;
 
@@ -613,6 +617,10 @@ function renderHand(cards,state){
   con.innerHTML="";
   const trump=getHukumSuit(state);
   const trick=state.currentTrick||{};
+  // Safety: normalize turnOrder in case Firebase returned it as object
+  if(state.turnOrder && !Array.isArray(state.turnOrder)){
+    state.turnOrder=Object.keys(state.turnOrder).sort().map(k=>state.turnOrder[k]);
+  }
   const trickCards=trick.cards||{};
   const ledSuit=Object.keys(trickCards).length>0?parseCard(Object.values(trickCards)[0]).suit:null;
 
@@ -669,7 +677,10 @@ function renderTurnBanner(state){
   const el=document.getElementById("turn-banner");
   const trick=state.currentTrick||{};
   if(trick.turn===myId){ el.className="turn-banner"; el.textContent="🃏 Your turn! Select a card and tap Play."; }
-  else{ el.className="waiting-banner"; el.textContent="⏳ Waiting for "+(state.players?.[trick.turn]?.name||"...")+` to play…`; }
+  else{
+    const name=state.players?.[trick.turn]?.name||trick.turn||"...";
+    el.className="waiting-banner"; el.textContent=`⏳ Waiting for ${name} to play…`;
+  }
 }
 
 // ── REDEAL ──
@@ -871,8 +882,9 @@ window.voteRedeal = async function(vote){
   } else if(approveCount >= otherPids.length){
     // All others approved → execute redeal
     updates[`rooms/${roomCode}/redealClaim/status`] = "approved";
-    // Redeal cards
-    const reps = state.turnOrder||[];
+    // Redeal cards — normalize turnOrder from Firebase object to array
+    const rawReps = state.turnOrder||[];
+    const reps = Array.isArray(rawReps)?rawReps:Object.keys(rawReps).sort().map(k=>rawReps[k]);
     const newH = dealCards(reps);
     Object.keys(state.players||{}).forEach(pid=>{
       const rep = reps[Number(state.players[pid].team)];
@@ -972,8 +984,9 @@ window.playSelectedCard=async function(){
   if(idx<0){toast("Card not in hand!",true);return;}
   myHand.splice(idx,1);
   const trickCards={...(trick.cards||{}),[myId]:selectedCard};
-  // Use stored turnOrder (stable array) instead of Object.keys() which has no guaranteed order
-  const turnOrder=state.turnOrder||Object.keys(state.players||{});
+  // Firebase stores arrays as objects {0:pid,1:pid,...} — always normalize to real JS array
+  const rawOrder=state.turnOrder||Object.keys(state.players||{});
+  const turnOrder=Array.isArray(rawOrder)?rawOrder:Object.keys(rawOrder).sort().map(k=>rawOrder[k]);
   const myIdx=turnOrder.indexOf(myId);
   const nextPid=turnOrder[(myIdx+1)%turnOrder.length];
   const allPlayed=Object.keys(trickCards).length>=turnOrder.length;
@@ -1004,9 +1017,10 @@ window.playSelectedCard=async function(){
       } else {
         updates[`rooms/${roomCode}/round`]=nextRound;
         updates[`rooms/${roomCode}/hukum`]="S";
-        const reps2=state.turnOrder||[];
+        const rawReps2=state.turnOrder||[];
+        let reps2=Array.isArray(rawReps2)?rawReps2:Object.keys(rawReps2).sort().map(k=>rawReps2[k]);
         if(reps2.length<4){
-          // fallback: rebuild from teams
+          reps2=[];
           for(let ti=0;ti<4;ti++){
             const tp=Object.keys(state.players||{}).filter(pid=>Number(state.players[pid].team)===ti);
             reps2.push(tp[0]);
