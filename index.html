@@ -91,6 +91,9 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .hand-cards{display:flex;flex-wrap:wrap;gap:6px;}
 .turn-banner{background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(232,67,147,.1));border:1.5px solid rgba(245,197,24,.4);border-radius:12px;padding:10px 16px;text-align:center;font-weight:800;margin-bottom:10px;}
 .waiting-banner{background:rgba(139,148,158,.1);border:1.5px solid var(--border);border-radius:12px;padding:10px 16px;text-align:center;color:var(--muted);font-weight:700;margin-bottom:10px;}
+.redeal-banner{background:rgba(155,89,182,.12);border:1.5px solid rgba(155,89,182,.5);border-radius:12px;padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.redeal-banner-text{font-size:.82rem;font-weight:700;color:#c39bd3;}
+.redeal-votes{font-size:.75rem;color:var(--muted);margin-top:2px;}
 .declare-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
 .declare-card h3{font-family:'Baloo 2',cursive;font-size:1.1rem;color:var(--gold);margin-bottom:6px;}
 .suit-chooser{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
@@ -200,7 +203,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
     <div class="game-round-info" id="game-round-label">Round 1 / 13</div>
     <div class="game-scores-mini" id="scores-mini"></div>
   </div>
-  <div class="hukum-bar" id="hukum-bar" style="display:none">
+  <div class="hukum-bar" id="hukum-bar">
     <span class="hukum-label">Hukum:</span>
     <span id="hukum-suit-icon" class="hukum-suit">♠</span>
     <span id="hukum-suit-name" class="hukum-name">Spades</span>
@@ -219,6 +222,10 @@ input::placeholder{color:var(--muted);font-weight:600;}
     </div>
     <div style="padding:10px 16px 0;">
       <div id="turn-banner"></div>
+      <div id="redeal-banner" style="display:none;" class="redeal-banner">
+        <div><div class="redeal-banner-text" id="redeal-reason"></div><div class="redeal-votes" id="redeal-votes-label"></div></div>
+        <button class="btn btn-sm" id="btn-redeal" style="background:rgba(155,89,182,.3);color:#c39bd3;border:1.5px solid rgba(155,89,182,.5);border-radius:50px;font-weight:800;white-space:nowrap;" onclick="requestRedeal()">🔀 Request Redeal</button>
+      </div>
     </div>
     <div class="hand-area">
       <div class="hand-label">
@@ -291,6 +298,36 @@ input::placeholder{color:var(--muted);font-weight:600;}
     <h2>📊 Final Scores</h2>
     <div id="full-scores-body"></div>
     <button class="btn btn-ghost btn-full btn-sm" style="margin-top:14px;" onclick="document.getElementById('full-scores-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<!-- REDEAL CLAIM MODAL -->
+<div class="modal-bg" id="redeal-modal">
+  <div class="modal-box">
+    <h2 id="redeal-modal-title">🔀 Redeal Requested</h2>
+    <p id="redeal-modal-desc" style="font-size:.83rem;color:var(--muted);margin-bottom:14px;text-align:center;"></p>
+    <!-- Claimant's revealed hand -->
+    <div id="redeal-shown-hand" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:16px;"></div>
+    <!-- Verdict buttons (shown to non-claimants only) -->
+    <div id="redeal-verdict-btns" style="display:none;gap:10px;flex-direction:column;">
+      <p style="font-size:.78rem;color:var(--muted);text-align:center;">Verify the hand above. Does this player truly have no Spades and no face cards?</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-green btn-full" onclick="voteRedeal('approve')">✅ Approve Redeal</button>
+        <button class="btn btn-red btn-full" onclick="voteRedeal('reject')">❌ Reject (Fake!)</button>
+      </div>
+    </div>
+    <!-- Host penalty button (shown when rejected) -->
+    <div id="redeal-penalty-section" style="display:none;">
+      <p style="font-size:.83rem;color:var(--red);font-weight:700;text-align:center;margin-bottom:10px;">⚠️ Claim was rejected! Host: verify the hand and apply penalty if it was fake.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-red btn-full" onclick="applyGhochiPenalty()">👻 Apply -50 Ghochi</button>
+        <button class="btn btn-ghost btn-full" onclick="dismissRedeal()">Dismiss / No Penalty</button>
+      </div>
+    </div>
+    <!-- Waiting message -->
+    <div id="redeal-waiting-msg" style="display:none;text-align:center;color:var(--muted);font-size:.83rem;font-weight:700;padding:8px 0;"></div>
+    <!-- Close (claimant only, before votes) -->
+    <button id="redeal-cancel-btn" class="btn btn-ghost btn-full btn-sm" style="margin-top:10px;display:none;" onclick="cancelRedealRequest()">Cancel My Request</button>
   </div>
 </div>
 
@@ -384,6 +421,7 @@ function listenRoom(){
     } else if(state.phase==="playing"){
       if(prevPhase!=="playing") showScreen("game");
       renderGame(state);
+      renderRedealModal(state);
       if(prevRound!==null && state.round!==prevRound && state.roundResult && !shownRounds.has(state.round)){
         shownRounds.add(state.round);
         showRoundResult(state);
@@ -538,18 +576,12 @@ function renderGame(state){
     sm.appendChild(d);
   });
 
-  // Hukum bar
-  if(state.hukum){
-    const sym=SUIT_MAP[state.hukum]||state.hukum;
-    const isRed=RED_SUITS.includes(sym);
-    document.getElementById("hukum-bar").style.display="flex";
-    document.getElementById("hukum-suit-icon").textContent=sym;
-    document.getElementById("hukum-suit-icon").className="hukum-suit "+(isRed?"hukum-red":"hukum-black");
-    document.getElementById("hukum-suit-name").textContent=SUIT_NAME_MAP[sym]||sym;
-    document.getElementById("hukum-suit-name").className="hukum-name "+(isRed?"hukum-red":"hukum-black");
-  } else {
-    document.getElementById("hukum-bar").style.display="none";
-  }
+  // Hukum bar — always Spades (♠), always visible
+  document.getElementById("hukum-bar").style.display="flex";
+  document.getElementById("hukum-suit-icon").textContent="♠";
+  document.getElementById("hukum-suit-icon").className="hukum-suit hukum-black";
+  document.getElementById("hukum-suit-name").textContent="Spades (Fixed Trump)";
+  document.getElementById("hukum-suit-name").className="hukum-name hukum-black";
 
   // My hand
   const myHand=state.hands?.[myId]||[];
@@ -557,11 +589,12 @@ function renderGame(state){
   renderHand(myHand,state);
   renderTrick(state);
   renderTurnBanner(state);
+  renderRedealBanner(state);
 
   // Trick stats
   const myT=myTeamIdx(state);
   document.getElementById("trick-stats").textContent=
-    state.hukum?`Team tricks: ${state.teamTricks?.[myT]||0}`:"";
+    `♠ Team tricks: ${state.teamTricks?.[myT]||0}`;
 
   renderDeclareTab(state);
   renderScoresTab(state);
@@ -638,6 +671,250 @@ function renderTurnBanner(state){
   if(trick.turn===myId){ el.className="turn-banner"; el.textContent="🃏 Your turn! Select a card and tap Play."; }
   else{ el.className="waiting-banner"; el.textContent="⏳ Waiting for "+(state.players?.[trick.turn]?.name||"...")+` to play…`; }
 }
+
+// ── REDEAL ──
+const FACE_RANKS = ["J","Q","K","A"];
+
+function handQualifiesRedeal(cards){
+  const hasSpade = cards.some(c=>parseCard(c).suit==="♠");
+  const hasFace  = cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+  return !hasSpade || !hasFace; // eligible if missing spades OR face cards
+}
+
+function handIsActuallyFake(cards){
+  // Returns true if the claim was dishonest (they DO have spades AND face cards)
+  const hasSpade = cards.some(c=>parseCard(c).suit==="♠");
+  const hasFace  = cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+  return hasSpade && hasFace;
+}
+
+function renderRedealBanner(state){
+  const banner = document.getElementById("redeal-banner");
+  const reasonEl = document.getElementById("redeal-reason");
+  const votesEl  = document.getElementById("redeal-votes-label");
+  const btn      = document.getElementById("btn-redeal");
+  if(!banner) return;
+
+  const claim = state.redealClaim;
+  // If a claim is already active, hide the banner (modal handles it)
+  if(claim){ banner.style.display="none"; return; }
+
+  // No tricks played yet = start of round only
+  const trickCards = state.currentTrick?.cards||{};
+  const totalTricks = Object.values(state.teamTricks||{}).reduce((a,b)=>a+Number(b),0);
+  if(totalTricks > 0 || Object.keys(trickCards).length > 0){
+    banner.style.display="none"; return;
+  }
+
+  const myHand = state.hands?.[myId]||[];
+  const hasSpade = myHand.some(c=>parseCard(c).suit==="♠");
+  const hasFace  = myHand.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+
+  if(!hasSpade && !hasFace){
+    reasonEl.textContent = "🚫 You have NO Spades and NO face cards!";
+    btn.textContent = "🔀 Request Redeal";
+    btn.disabled = false;
+    banner.style.display = "flex";
+  } else if(!hasSpade){
+    reasonEl.textContent = "🚫 You have NO Spades (Hukum)!";
+    btn.textContent = "🔀 Request Redeal";
+    btn.disabled = false;
+    banner.style.display = "flex";
+  } else if(!hasFace){
+    reasonEl.textContent = "🚫 You have NO face cards (J/Q/K/A)!";
+    btn.textContent = "🔀 Request Redeal";
+    btn.disabled = false;
+    banner.style.display = "flex";
+  } else {
+    banner.style.display = "none";
+  }
+}
+
+function renderRedealModal(state){
+  const claim = state.redealClaim;
+  const modal = document.getElementById("redeal-modal");
+  if(!claim){ modal.classList.remove("show"); return; }
+
+  modal.classList.add("show");
+  const claimantName = state.players?.[claim.pid]?.name || "Someone";
+  const claimantTeam = Number(state.players?.[claim.pid]?.team??-1);
+  const teamName = state.teams?.[claimantTeam]?.name || "";
+  const cards = claim.hand || [];
+  const status = claim.status || "pending"; // pending | approved | rejected | penalised
+
+  // Title
+  document.getElementById("redeal-modal-title").textContent =
+    status==="penalised" ? "👻 Ghochi Penalty Applied!" :
+    status==="rejected"  ? "❌ Redeal Rejected!" :
+    status==="approved"  ? "✅ Redeal Approved!" :
+    "🔀 Redeal Requested";
+
+  // Description
+  let reasonText = "";
+  const hasSpade = cards.some(c=>parseCard(c).suit==="♠");
+  const hasFace  = cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+  if(!hasSpade && !hasFace) reasonText = "no Spades and no face cards";
+  else if(!hasSpade) reasonText = "no Spades (Hukum)";
+  else if(!hasFace)  reasonText = "no face cards (J/Q/K/A)";
+  else reasonText = "⚠️ FAKE — they have both Spades and face cards!";
+
+  document.getElementById("redeal-modal-desc").innerHTML =
+    `<span class="pill pill-${claimantTeam}">${claimantName} (${teamName})</span><br>Claims to have <strong>${reasonText}</strong>. Hand shown below:`;
+
+  // Revealed hand
+  const handCon = document.getElementById("redeal-shown-hand");
+  handCon.innerHTML = "";
+  cards.forEach(cid=>{
+    const c = parseCard(cid);
+    const isRed = RED_SUITS.includes(c.suit);
+    const isTrump = c.suit==="♠";
+    const isFace = FACE_RANKS.includes(c.rank);
+    const el = document.createElement("div");
+    el.className = `card card-${isRed?"red":"black"}${isTrump?" card-trump":""}`;
+    el.style.cursor="default";
+    // Highlight suspicious cards (spades or face) in red outline
+    if(isTrump||isFace) el.style.outline="2.5px solid var(--red)";
+    el.innerHTML = `<div><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>
+      <div class="card-center">${c.suit}</div>
+      <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>`;
+    handCon.appendChild(el);
+  });
+
+  const iAmClaimant = claim.pid === myId;
+  const votes = claim.votes || {};
+  const allPids = Object.keys(state.players||{});
+  const otherPids = allPids.filter(p=>p!==claim.pid);
+  const approveCount = Object.values(votes).filter(v=>v==="approve").length;
+  const rejectCount  = Object.values(votes).filter(v=>v==="reject").length;
+  const myVote = votes[myId];
+
+  // Show/hide sections based on status and role
+  const verdictBtns   = document.getElementById("redeal-verdict-btns");
+  const penaltySection= document.getElementById("redeal-penalty-section");
+  const waitingMsg    = document.getElementById("redeal-waiting-msg");
+  const cancelBtn     = document.getElementById("redeal-cancel-btn");
+
+  verdictBtns.style.display    = "none";
+  penaltySection.style.display = "none";
+  waitingMsg.style.display     = "none";
+  cancelBtn.style.display      = "none";
+
+  if(status==="pending"){
+    if(iAmClaimant){
+      waitingMsg.style.display = "block";
+      waitingMsg.textContent = `Waiting for others to verify… (${approveCount} approve, ${rejectCount} reject out of ${otherPids.length})`;
+      cancelBtn.style.display = "block";
+    } else {
+      if(!myVote){
+        verdictBtns.style.display = "flex";
+      } else {
+        waitingMsg.style.display = "block";
+        waitingMsg.textContent = `You voted: ${myVote==="approve"?"✅ Approve":"❌ Reject"}. Waiting for others… (${approveCount}✅ ${rejectCount}❌ / ${otherPids.length})`;
+      }
+    }
+  } else if(status==="rejected"){
+    if(isHost){
+      penaltySection.style.display = "block";
+    } else {
+      waitingMsg.style.display = "block";
+      waitingMsg.textContent = "Claim rejected! Waiting for host to decide penalty…";
+    }
+  } else if(status==="approved"){
+    waitingMsg.style.display = "block";
+    waitingMsg.textContent = "✅ All approved! Redealing cards…";
+  } else if(status==="penalised"){
+    waitingMsg.style.display = "block";
+    waitingMsg.textContent = `👻 ${claimantName}'s team gets -50 Ghochi penalty for fake redeal!`;
+    // Auto-close after 4s
+    setTimeout(()=>{ modal.classList.remove("show"); }, 4000);
+  }
+}
+
+window.requestRedeal = async function(){
+  const state = gameState;
+  if(!state) return;
+  const myHand = state.hands?.[myId]||[];
+  if(!handQualifiesRedeal(myHand)){ toast("You don't qualify for a redeal!",true); return; }
+  const totalTricks = Object.values(state.teamTricks||{}).reduce((a,b)=>a+Number(b),0);
+  if(totalTricks>0){ toast("Redeal only allowed before any trick is played!",true); return; }
+  // Store claim with revealed hand in Firebase
+  await update(roomRef,{
+    redealClaim:{ pid:myId, hand:myHand, status:"pending", votes:{} }
+  });
+  toast("Redeal requested — your hand is now visible to all!");
+};
+
+window.cancelRedealRequest = async function(){
+  const state = gameState;
+  if(state?.redealClaim?.pid!==myId){ return; }
+  await update(roomRef,{ redealClaim:null });
+  toast("Redeal request cancelled.");
+};
+
+window.voteRedeal = async function(vote){
+  const state = gameState;
+  const claim = state?.redealClaim;
+  if(!claim||claim.pid===myId) return;
+  const allPids = Object.keys(state.players||{});
+  const otherPids = allPids.filter(p=>p!==claim.pid);
+  const updates = {};
+  updates[`rooms/${roomCode}/redealClaim/votes/${myId}`] = vote;
+
+  // Calculate what votes will look like after this one
+  const newVotes = {...(claim.votes||{}), [myId]:vote};
+  const approveCount = Object.values(newVotes).filter(v=>v==="approve").length;
+  const rejectCount  = Object.values(newVotes).filter(v=>v==="reject").length;
+
+  if(rejectCount > 0){
+    // Any reject = rejected immediately
+    updates[`rooms/${roomCode}/redealClaim/status`] = "rejected";
+  } else if(approveCount >= otherPids.length){
+    // All others approved → execute redeal
+    updates[`rooms/${roomCode}/redealClaim/status`] = "approved";
+    // Redeal cards
+    const reps = state.turnOrder||[];
+    const newH = dealCards(reps);
+    Object.keys(state.players||{}).forEach(pid=>{
+      const rep = reps[Number(state.players[pid].team)];
+      updates[`rooms/${roomCode}/hands/${pid}`] = newH[rep];
+    });
+    updates[`rooms/${roomCode}/declarations`] = {};
+    updates[`rooms/${roomCode}/teamTricks`] = {"0":0,"1":0,"2":0,"3":0};
+    updates[`rooms/${roomCode}/currentTrick`] = {cards:{},leader:state.currentTrick?.leader||reps[0],turn:state.currentTrick?.leader||reps[0]};
+    // Clear claim after short delay via a flag; we'll clear it on next render after approved
+    setTimeout(async()=>{
+      await update(roomRef,{ redealClaim:null });
+      toast("Cards redealt! 🔀");
+    }, 2500);
+  }
+
+  await update(ref(db,"/"), updates);
+};
+
+window.applyGhochiPenalty = async function(){
+  const state = gameState;
+  if(!isHost){ toast("Only host can apply penalty!",true); return; }
+  const claim = state?.redealClaim;
+  if(!claim) return;
+  const claimantTeam = Number(state.players?.[claim.pid]?.team??-1);
+  if(claimantTeam<0) return;
+  const teams = (state.teams||[]).map((t,ti)=>{
+    if(ti===claimantTeam) return {...t, score:(t.score||0)-50};
+    return t;
+  });
+  await update(roomRef,{
+    teams,
+    "redealClaim/status":"penalised"
+  });
+  toast(`👻 -50 Ghochi applied to ${state.teams[claimantTeam]?.name}!`,true);
+  setTimeout(async()=>{ await update(roomRef,{redealClaim:null}); }, 4000);
+};
+
+window.dismissRedeal = async function(){
+  if(!isHost){ toast("Only host can dismiss!",true); return; }
+  await update(roomRef,{ redealClaim:null });
+  toast("Redeal dismissed. Game continues.");
+};
 
 // ── DECLARE ──
 function renderDeclareTab(state){
