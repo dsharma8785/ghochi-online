@@ -235,19 +235,6 @@ input::placeholder{color:var(--muted);font-weight:600;}
 
   <!-- DECLARE TAB -->
   <div id="gtab-declare" style="display:none;overflow-y:auto;padding:16px;flex:1;">
-    <div id="hukum-chooser-section" style="display:none;">
-      <div class="declare-card">
-        <h3>🎯 Choose Hukum (Trump)</h3>
-        <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px;">Pick the trump suit for this round.</p>
-        <div class="suit-chooser">
-          <div class="suit-btn hukum-red" onclick="selectSuit('H')" id="suit-H">♥<span>Hearts</span></div>
-          <div class="suit-btn hukum-red" onclick="selectSuit('D')" id="suit-D">♦<span>Diamonds</span></div>
-          <div class="suit-btn hukum-black" onclick="selectSuit('C')" id="suit-C">♣<span>Clubs</span></div>
-          <div class="suit-btn hukum-black" onclick="selectSuit('S')" id="suit-S">♠<span>Spades</span></div>
-        </div>
-        <button class="btn btn-gold btn-full" id="btn-confirm-hukum" onclick="confirmHukum()" disabled>Confirm Hukum</button>
-      </div>
-    </div>
     <div id="my-declare-section" style="display:none;">
       <div class="declare-card">
         <h3>📢 Your Declaration</h3>
@@ -519,12 +506,16 @@ window.hostStartGame=async function(){
     const tp=pArr.filter(([,p])=>Number(p.team)===ti).map(([pid])=>pid);
     reps.push(tp[0]);
   }
+  // reps[0..3] are the 4 team representatives in team order (one per team).
+  // Store this stable turn order so every client uses the same sequence.
+  const turnOrder=reps; // [team0rep, team1rep, team2rep, team3rep]
   const hands=dealCards(reps);
   const allHands={};
   pArr.forEach(([pid,p])=>{ allHands[pid]=hands[reps[Number(p.team)]]; });
   await update(roomRef,{
-    phase:"playing", round:1, hukum:null,
+    phase:"playing", round:1, hukum:"S",
     hands:allHands, declarations:{},
+    turnOrder:turnOrder,
     currentTrick:{cards:{},leader:reps[0],turn:reps[0]},
     teamTricks:{"0":0,"1":0,"2":0,"3":0},
     roundHistory:[],
@@ -608,10 +599,15 @@ function renderHand(cards,state){
     el.innerHTML=`<div><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>
       <div class="card-center">${c.suit}</div>
       <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>`;
-    if(!disabled) el.onclick=()=>{ selectedCard=selectedCard===cid?null:cid; renderHand(cards,state); };
+  if(!disabled) el.onclick=()=>{ selectedCard=selectedCard===cid?null:cid; renderHand(cards,state); };
+    // Restore visual selection if selectedCard is still valid
+    if(isSelected && trick.turn===myId) el.classList.add("selected");
     con.appendChild(el);
   });
-  document.getElementById("btn-play-card").disabled=trick.turn!==myId;
+  const isMyTurn = trick.turn===myId;
+  // If it's no longer our turn (another player played), clear any stale selection
+  if(!isMyTurn) selectedCard=null;
+  document.getElementById("btn-play-card").disabled = !isMyTurn;
 }
 
 function renderTrick(state){
@@ -639,27 +635,9 @@ function renderTrick(state){
 function renderTurnBanner(state){
   const el=document.getElementById("turn-banner");
   const trick=state.currentTrick||{};
-  if(!state.hukum){
-    if(isHost){ el.className="turn-banner"; el.textContent="⚙️ Go to Declare tab → choose Hukum"; }
-    else{ el.className="waiting-banner"; el.textContent="⏳ Waiting for host to set Hukum…"; }
-    return;
-  }
   if(trick.turn===myId){ el.className="turn-banner"; el.textContent="🃏 Your turn! Select a card and tap Play."; }
   else{ el.className="waiting-banner"; el.textContent="⏳ Waiting for "+(state.players?.[trick.turn]?.name||"...")+` to play…`; }
 }
-
-// ── HUKUM ──
-window.selectSuit=function(key){
-  selectedSuit=key;
-  ["H","D","C","S"].forEach(k=>document.getElementById("suit-"+k).classList.remove("selected"));
-  document.getElementById("suit-"+key).classList.add("selected");
-  document.getElementById("btn-confirm-hukum").disabled=false;
-};
-window.confirmHukum=async function(){
-  if(!selectedSuit) return;
-  await update(roomRef,{hukum:selectedSuit});
-  toast("Hukum set! "+SUIT_MAP[selectedSuit]);
-};
 
 // ── DECLARE ──
 function renderDeclareTab(state){
@@ -668,9 +646,8 @@ function renderDeclareTab(state){
   const myTeam=myTeamIdx(state);
   const myTeamPids=Object.keys(players).filter(pid=>Number(players[pid].team)===myTeam);
   const myTeamDeclared=myTeamPids.some(pid=>decls[pid]);
-
-  document.getElementById("hukum-chooser-section").style.display=(isHost&&!state.hukum)?"block":"none";
-  document.getElementById("my-declare-section").style.display=(state.hukum&&!myTeamDeclared)?"block":"none";
+  // Hukum is always Spades — no chooser needed
+  document.getElementById("my-declare-section").style.display=(!myTeamDeclared)?"block":"none";
 }
 
 window.toggleBlind=function(){
@@ -718,10 +695,11 @@ window.playSelectedCard=async function(){
   if(idx<0){toast("Card not in hand!",true);return;}
   myHand.splice(idx,1);
   const trickCards={...(trick.cards||{}),[myId]:selectedCard};
-  const pArr=Object.keys(state.players||{});
-  const myIdx=pArr.indexOf(myId);
-  const nextPid=pArr[(myIdx+1)%pArr.length];
-  const allPlayed=Object.keys(trickCards).length>=pArr.length;
+  // Use stored turnOrder (stable array) instead of Object.keys() which has no guaranteed order
+  const turnOrder=state.turnOrder||Object.keys(state.players||{});
+  const myIdx=turnOrder.indexOf(myId);
+  const nextPid=turnOrder[(myIdx+1)%turnOrder.length];
+  const allPlayed=Object.keys(trickCards).length>=turnOrder.length;
   const updates={};
   updates[`rooms/${roomCode}/hands/${myId}`]=myHand;
   updates[`rooms/${roomCode}/currentTrick/cards/${myId}`]=selectedCard;
@@ -748,11 +726,14 @@ window.playSelectedCard=async function(){
         updates[`rooms/${roomCode}/phase`]="done";
       } else {
         updates[`rooms/${roomCode}/round`]=nextRound;
-        updates[`rooms/${roomCode}/hukum`]=null;
-        const reps2=[];
-        for(let ti=0;ti<4;ti++){
-          const tp=Object.keys(state.players||{}).filter(pid=>Number(state.players[pid].team)===ti);
-          reps2.push(tp[0]);
+        updates[`rooms/${roomCode}/hukum`]="S";
+        const reps2=state.turnOrder||[];
+        if(reps2.length<4){
+          // fallback: rebuild from teams
+          for(let ti=0;ti<4;ti++){
+            const tp=Object.keys(state.players||{}).filter(pid=>Number(state.players[pid].team)===ti);
+            reps2.push(tp[0]);
+          }
         }
         const newH=dealCards(reps2);
         Object.keys(state.players||{}).forEach(pid=>{
@@ -899,7 +880,7 @@ window.showFinalScores=function(){
 
 window.newGame=function(){
   if(!isHost){toast("Only host can start new game!",true);return;}
-  update(roomRef,{phase:"waiting",round:0,hukum:null,hands:{},declarations:{},
+  update(roomRef,{phase:"waiting",round:0,hukum:"S",hands:{},declarations:{},
     currentTrick:null,roundHistory:[],roundResult:null,
     teamTricks:{"0":0,"1":0,"2":0,"3":0},
     teams:TEAM_NAMES.map(n=>({name:n,score:0}))
