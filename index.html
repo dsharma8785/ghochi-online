@@ -983,7 +983,9 @@ window.playSelectedCard=async function(){
   const idx=myHand.indexOf(selectedCard);
   if(idx<0){toast("Card not in hand!",true);return;}
   myHand.splice(idx,1);
-  const trickCards={...(trick.cards||{}),[myId]:selectedCard};
+  // Normalize trick.cards from Firebase (may be object or null)
+  const existingCards=trick.cards||{};
+  const trickCards={...existingCards,[myId]:selectedCard};
   // Firebase stores arrays as objects {0:pid,1:pid,...} — always normalize to real JS array
   const rawOrder=state.turnOrder||Object.keys(state.players||{});
   const turnOrder=Array.isArray(rawOrder)?rawOrder:Object.keys(rawOrder).sort().map(k=>rawOrder[k]);
@@ -992,7 +994,6 @@ window.playSelectedCard=async function(){
   const allPlayed=Object.keys(trickCards).length>=turnOrder.length;
   const updates={};
   updates[`rooms/${roomCode}/hands/${myId}`]=myHand;
-  updates[`rooms/${roomCode}/currentTrick/cards/${myId}`]=selectedCard;
 
   if(allPlayed){
     const trump=getHukumSuit(state);
@@ -1038,6 +1039,7 @@ window.playSelectedCard=async function(){
       updates[`rooms/${roomCode}/currentTrick`]={cards:{},leader:winner,turn:winner};
     }
   } else {
+    updates[`rooms/${roomCode}/currentTrick/cards`]=trickCards;
     updates[`rooms/${roomCode}/currentTrick/turn`]=nextPid;
   }
 
