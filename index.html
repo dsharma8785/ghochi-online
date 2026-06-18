@@ -6,11 +6,12 @@
 <title>🃏 Ghochi — Play Online</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-:root {
+:root{
   --bg:#0d1117;--surface:#161b22;--card:#1c2230;--border:rgba(255,255,255,0.08);
   --gold:#f5c518;--gold2:#e8a800;--red:#e74c3c;--green:#2ecc71;--blue:#3498db;
   --purple:#9b59b6;--pink:#e84393;--text:#e6edf3;--muted:#8b949e;
   --radius:16px;--shadow:0 8px 32px rgba(0,0,0,0.5);
+  --table-green:#1a4a2a;--felt:#15391f;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
@@ -20,7 +21,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .logo{font-family:'Baloo 2',cursive;font-size:clamp(3rem,10vw,5rem);font-weight:800;background:linear-gradient(135deg,var(--gold),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;line-height:1;}
 .logo-suits{font-size:1.6rem;text-align:center;letter-spacing:10px;margin:6px 0 4px;opacity:.6;}
 .logo-sub{text-align:center;color:var(--muted);font-size:.85rem;font-weight:600;margin-bottom:36px;}
-.lobby-cards{display:flex;flex-direction:column;gap:12px;width:100%;max-width:400px;}
+.lobby-cards{display:flex;flex-direction:column;gap:12px;width:100%;max-width:420px;}
 .lobby-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
 .lobby-card h3{font-family:'Baloo 2',cursive;font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;}
 .input-group{display:flex;gap:8px;}
@@ -36,6 +37,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .btn-ghost:hover{border-color:var(--gold);}
 .btn-green{background:linear-gradient(135deg,#27ae60,var(--green));color:#0d1117;}
 .btn-red{background:linear-gradient(135deg,#c0392b,var(--red));color:#fff;}
+.btn-blue{background:linear-gradient(135deg,#2980b9,var(--blue));color:#fff;}
 .btn-sm{padding:7px 16px;font-size:.82rem;}
 .btn-full{width:100%;}
 .btn-icon{width:40px;height:40px;padding:0;border-radius:10px;flex-shrink:0;}
@@ -50,14 +52,19 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .player-tile .ptname{font-weight:800;font-size:.9rem;}
 .player-tile .ptteam{font-size:.72rem;color:var(--muted);margin-top:3px;}
 .you-badge{position:absolute;top:-6px;right:-6px;background:var(--gold);color:#0d1117;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:50px;}
+.bot-badge{position:absolute;top:-6px;left:-6px;background:var(--blue);color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:50px;}
 .team-assign-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
 .team-slot{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px;}
-.team-slot h4{font-family:'Baloo 2',cursive;font-size:.95rem;font-weight:800;margin-bottom:8px;}
+.team-slot h4{font-family:'Baloo 2',cursive;font-size:.95rem;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.team-slot h4 input{flex:1;background:transparent;border:none;border-bottom:1px dashed var(--border);color:inherit;font-family:'Baloo 2',cursive;font-size:.95rem;font-weight:800;outline:none;padding:1px 2px;}
 .team-slot-members{font-size:.78rem;color:var(--muted);line-height:1.6;min-height:20px;}
 .team-slot-0{border-color:rgba(231,76,60,.4);} .team-slot-1{border-color:rgba(52,152,219,.4);}
 .team-slot-2{border-color:rgba(46,204,113,.4);} .team-slot-3{border-color:rgba(245,197,24,.4);}
 .team-slot-0 h4{color:#e74c3c;} .team-slot-1 h4{color:#3498db;}
 .team-slot-2 h4{color:#2ecc71;} .team-slot-3 h4{color:#f5c518;}
+
+/* ── GAME SCREEN ── */
+#screen-game{padding:0;background:var(--bg);}
 .game-top{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
 .game-round-info{font-family:'Baloo 2',cursive;font-size:1rem;font-weight:800;color:var(--gold);}
 .game-scores-mini{display:flex;gap:12px;}
@@ -69,43 +76,71 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .hukum-label{color:var(--muted);font-weight:700;}
 .hukum-suit{font-size:1.6rem;}
 .hukum-name{font-weight:800;font-size:1rem;}
-.hukum-red{color:#e74c3c;} .hukum-black{color:var(--text);}
-.trick-area{background:#0a1a0f;border-bottom:1px solid var(--border);padding:12px 16px;min-height:110px;}
-.trick-label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
-.trick-cards{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-.trick-card-played{display:flex;flex-direction:column;align-items:center;gap:4px;}
-.player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.card{width:54px;height:80px;background:white;border-radius:8px;border:1.5px solid rgba(0,0,0,.15);display:flex;flex-direction:column;justify-content:space-between;padding:4px 5px;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .15s;flex-shrink:0;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.4);}
-.card:hover{transform:translateY(-6px);box-shadow:0 8px 20px rgba(0,0,0,.5);}
-.card.selected{transform:translateY(-12px);box-shadow:0 12px 28px rgba(245,197,24,.5);outline:2px solid var(--gold);}
-.card.disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
-.card-rank{font-family:'Baloo 2',cursive;font-weight:800;font-size:.9rem;line-height:1;}
-.card-suit{font-size:.75rem;line-height:1;}
-.card-center{font-size:1.2rem;text-align:center;align-self:center;}
-.card-bottom{transform:rotate(180deg);}
-.card-red .card-rank,.card-red .card-suit{color:#e74c3c;}
-.card-black .card-rank,.card-black .card-suit{color:#1a1a2e;}
-.card-trump{box-shadow:0 0 0 2px var(--gold),0 2px 8px rgba(0,0,0,.4)!important;}
-.hand-area{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+.hukum-black{color:var(--text);}
+
+/* ── TABLE AREA ── */
+.table-area{background:var(--felt);border-bottom:2px solid rgba(255,255,255,.06);position:relative;display:flex;align-items:center;justify-content:center;min-height:220px;padding:12px;}
+.round-table{width:200px;height:140px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#1e5c30,#0e3318);border:4px solid #2d6b3a;box-shadow:0 0 0 6px rgba(0,0,0,.3),0 8px 32px rgba(0,0,0,.5);position:relative;display:flex;align-items:center;justify-content:center;}
+.table-cards{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:160px;}
+/* Player seats around table */
+.player-seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.player-seat.seat-top{top:-38px;left:50%;transform:translateX(-50%);}
+.player-seat.seat-bottom{bottom:-38px;left:50%;transform:translateX(-50%);}
+.player-seat.seat-left{left:-70px;top:50%;transform:translateY(-50%);}
+.player-seat.seat-right{right:-70px;top:50%;transform:translateY(-50%);}
+.seat-name{font-size:.68rem;font-weight:800;color:var(--text);background:rgba(0,0,0,.6);padding:2px 8px;border-radius:50px;white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis;}
+.seat-name.active-turn{background:var(--gold);color:#0d1117;}
+.seat-name.my-seat{border:1.5px solid var(--gold);}
+.seat-cards-count{font-size:.6rem;color:var(--muted);font-weight:700;}
+.table-trick-label{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:.6rem;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+
+/* ── CARD DESIGNS ── */
+.card{width:58px;height:86px;background:#fffef8;border-radius:8px;border:1px solid rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:space-between;padding:3px 4px;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .15s;flex-shrink:0;position:relative;box-shadow:0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.8);}
+.card::before{content:'';position:absolute;inset:2px;border-radius:6px;border:1px solid rgba(0,0,0,.06);pointer-events:none;}
+.card:hover:not(.disabled){transform:translateY(-8px);box-shadow:0 12px 24px rgba(0,0,0,.6);}
+.card.selected{transform:translateY(-14px);box-shadow:0 16px 32px rgba(245,197,24,.6);outline:2.5px solid var(--gold);}
+.card.disabled{opacity:.55;cursor:not-allowed;transform:none!important;}
+.card-top{display:flex;flex-direction:column;line-height:1.1;}
+.card-rank{font-family:'Baloo 2',cursive;font-weight:900;font-size:.95rem;line-height:1;}
+.card-suit-sm{font-size:.7rem;line-height:1;}
+.card-center-area{display:flex;align-items:center;justify-content:center;flex:1;}
+.card-face-art{font-size:1.5rem;line-height:1;text-align:center;}
+.card-center-pips{display:grid;align-items:center;justify-items:center;width:100%;gap:1px;}
+.card-pip{font-size:.85rem;line-height:1;}
+.card-bottom{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;transform:rotate(180deg);}
+/* Colours */
+.card-red .card-rank,.card-red .card-suit-sm,.card-red .card-pip,.card-red .card-face-art{color:#cc1111;}
+.card-black .card-rank,.card-black .card-suit-sm,.card-black .card-pip,.card-black .card-face-art{color:#111122;}
+.card-trump{box-shadow:0 0 0 2.5px #f5c518,0 3px 10px rgba(0,0,0,.5)!important;background:linear-gradient(160deg,#fffef8 70%,#fff9e6);}
+/* Face card art backgrounds */
+.card-face{background:linear-gradient(160deg,#fff9f0,#fffef8);}
+.face-inner{position:absolute;inset:5px;border-radius:4px;border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+/* Small trick cards */
+.trick-card-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:64px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trick-winner-label{font-size:.6rem;color:var(--gold);font-weight:800;text-align:center;}
+.card-sm{width:44px;height:64px;border-radius:6px;padding:2px 3px;}
+.card-sm .card-rank{font-size:.78rem;}
+.card-sm .card-suit-sm{font-size:.6rem;}
+.card-sm .card-face-art{font-size:1.1rem;}
+
+/* ── HAND AREA ── */
+.hand-area{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
 .hand-label{display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
 .hand-cards{display:flex;flex-wrap:wrap;gap:6px;}
-.turn-banner{background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(232,67,147,.1));border:1.5px solid rgba(245,197,24,.4);border-radius:12px;padding:10px 16px;text-align:center;font-weight:800;margin-bottom:10px;}
-.waiting-banner{background:rgba(139,148,158,.1);border:1.5px solid var(--border);border-radius:12px;padding:10px 16px;text-align:center;color:var(--muted);font-weight:700;margin-bottom:10px;}
+.turn-banner{background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(232,67,147,.1));border:1.5px solid rgba(245,197,24,.4);border-radius:12px;padding:10px 16px;text-align:center;font-weight:800;margin-bottom:10px;font-size:.9rem;}
+.waiting-banner{background:rgba(139,148,158,.1);border:1.5px solid var(--border);border-radius:12px;padding:10px 16px;text-align:center;color:var(--muted);font-weight:700;margin-bottom:10px;font-size:.9rem;}
 .redeal-banner{background:rgba(155,89,182,.12);border:1.5px solid rgba(155,89,182,.5);border-radius:12px;padding:10px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .redeal-banner-text{font-size:.82rem;font-weight:700;color:#c39bd3;}
-.redeal-votes{font-size:.75rem;color:var(--muted);margin-top:2px;}
+
+/* ── DECLARE/SCORES TABS ── */
 .declare-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
 .declare-card h3{font-family:'Baloo 2',cursive;font-size:1.1rem;color:var(--gold);margin-bottom:6px;}
-.suit-chooser{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
-.suit-btn{padding:20px;border-radius:14px;border:2px solid var(--border);background:var(--surface);cursor:pointer;font-size:2.2rem;text-align:center;transition:all .18s;}
-.suit-btn:hover,.suit-btn.selected{border-color:var(--gold);background:rgba(245,197,24,.1);}
-.suit-btn span{display:block;font-size:.72rem;font-weight:800;color:var(--muted);margin-top:4px;}
 .declare-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:12px;}
 .declare-table th{background:var(--surface);padding:7px 10px;text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:1px;}
 .declare-table td{padding:8px 10px;border-bottom:1px solid var(--border);}
 .declare-table tr:last-child td{border-bottom:none;}
 .blind-toggle-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .2s;margin-bottom:12px;}
-.blind-toggle-row:hover{border-color:var(--purple);}
 .toggle-track{width:40px;height:22px;background:rgba(255,255,255,.1);border-radius:50px;position:relative;transition:background .2s;flex-shrink:0;}
 .toggle-track.on{background:var(--purple);}
 .toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s;}
@@ -120,10 +155,36 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .score-team-players{font-size:.75rem;color:var(--muted);}
 .score-team-val{font-family:'Baloo 2',cursive;font-size:2rem;font-weight:800;min-width:70px;text-align:right;}
 .score-history-row{display:flex;justify-content:space-between;font-size:.78rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--muted);}
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;align-items:center;justify-content:center;padding:16px;}
+
+/* ── MODALS ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;padding:16px;}
 .modal-bg.show{display:flex;}
 .modal-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:440px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow-y:auto;}
 .modal-box h2{font-family:'Baloo 2',cursive;font-size:1.5rem;color:var(--gold);margin-bottom:16px;text-align:center;}
+
+/* ── TRICK WIN OVERLAY ── */
+#trick-win-overlay{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.75);pointer-events:none;opacity:0;transition:opacity .3s;}
+#trick-win-overlay.show{opacity:1;}
+.trick-win-inner{background:var(--card);border:2px solid var(--gold);border-radius:20px;padding:20px 32px;text-align:center;box-shadow:0 0 40px rgba(245,197,24,.3);}
+.trick-win-title{font-family:'Baloo 2',cursive;font-size:1.8rem;font-weight:800;color:var(--gold);}
+.trick-win-cards{display:flex;gap:8px;justify-content:center;margin:12px 0;}
+.trick-win-winner{font-size:.9rem;font-weight:700;color:var(--muted);}
+
+/* ── DEAL ANIMATION ── */
+#deal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+#deal-overlay.show{display:flex;}
+.deal-deck{position:relative;width:58px;height:86px;margin:0 auto;}
+.deal-card-anim{position:absolute;width:58px;height:86px;background:linear-gradient(135deg,#1a237e,#283593);border-radius:8px;border:2px solid rgba(255,255,255,.15);box-shadow:0 4px 16px rgba(0,0,0,.5);top:0;left:0;}
+.deal-card-anim::after{content:'🃏';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;opacity:.4;}
+@keyframes dealFly{0%{transform:translate(0,0) rotate(0deg);opacity:1;}100%{transform:var(--deal-to);opacity:0;}}
+.deal-card-flying{animation:dealFly .45s ease-in forwards;}
+.deal-title{color:var(--gold);font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:800;}
+.deal-sub{color:var(--muted);font-size:.85rem;}
+
+/* ── BOT TAG ── */
+.bot-tag{display:inline-block;background:rgba(52,152,219,.2);color:var(--blue);font-size:.6rem;font-weight:800;padding:1px 6px;border-radius:50px;margin-left:4px;vertical-align:middle;}
+
+/* ── WINNER ── */
 #screen-winner{align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at center,rgba(245,197,24,.12) 0%,var(--bg) 70%);}
 .trophy{font-size:5rem;animation:bounce 1s ease infinite;}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
@@ -146,7 +207,14 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
 .dot-green{background:var(--green);box-shadow:0 0 6px var(--green);}
 #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:800;}
-#screen-game{padding:0;}
+.reconnect-bar{background:rgba(231,76,60,.15);border-bottom:2px solid var(--red);padding:6px 16px;font-size:.78rem;font-weight:700;color:var(--red);text-align:center;display:none;}
+.reconnect-bar.show{display:block;}
+/* Cards played history strip */
+.cards-played-strip{padding:6px 16px;background:rgba(0,0,0,.2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow-x:auto;min-height:36px;}
+.cards-played-label{font-size:.62rem;color:var(--muted);font-weight:800;white-space:nowrap;}
+.played-mini{font-size:.75rem;font-weight:800;padding:1px 5px;border-radius:4px;white-space:nowrap;}
+.played-mini-red{color:#e74c3c;background:rgba(231,76,60,.1);}
+.played-mini-black{color:var(--text);background:rgba(255,255,255,.07);}
 </style>
 </head>
 <body>
@@ -160,6 +228,19 @@ input::placeholder{color:var(--muted);font-weight:600;}
     <div class="lobby-card">
       <h3>Your Name</h3>
       <input type="text" id="player-name-input" placeholder="Enter your name…" maxlength="16" autocomplete="off"/>
+    </div>
+    <div class="lobby-card">
+      <h3>🤖 Bot Options</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:.8rem;color:var(--muted);font-weight:700;">Bots fill empty team slots:</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" id="bot-none-btn" onclick="setBotMode('none')" style="flex:1;">👤 No Bots</button>
+          <button class="btn btn-blue btn-sm" id="bot-some-btn" onclick="setBotMode('some')" style="flex:1;">🤖 With Bots</button>
+        </div>
+        <div id="bot-solo-wrap" style="display:none;">
+          <button class="btn btn-ghost btn-sm btn-full" id="bot-solo-btn" onclick="startSoloGame()">🎮 Solo vs 3 Bots</button>
+        </div>
+      </div>
     </div>
     <div class="lobby-card">
       <h3>🏠 Create a Room</h3>
@@ -189,7 +270,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
   </div>
   <div class="section-label">PLAYERS IN ROOM</div>
   <div class="players-waiting" id="players-waiting-grid"></div>
-  <div class="section-label">TEAMS — Tap to join a team</div>
+  <div class="section-label">TEAMS — Tap to join · Edit name to rename</div>
   <div class="team-assign-grid" id="team-assign-grid"></div>
   <div style="margin-top:auto;padding-top:16px;">
     <div id="waiting-status" style="text-align:center;color:var(--muted);font-size:.82rem;margin-bottom:12px;font-weight:700;">Waiting for host to start the game…</div>
@@ -199,14 +280,15 @@ input::placeholder{color:var(--muted);font-weight:600;}
 
 <!-- GAME -->
 <div class="screen" id="screen-game">
+  <div class="reconnect-bar" id="reconnect-bar">⚠️ Connection lost — reconnecting…</div>
   <div class="game-top">
     <div class="game-round-info" id="game-round-label">Round 1 / 13</div>
     <div class="game-scores-mini" id="scores-mini"></div>
   </div>
   <div class="hukum-bar" id="hukum-bar">
-    <span class="hukum-label">Hukum:</span>
+    <span class="hukum-label">Trump:</span>
     <span id="hukum-suit-icon" class="hukum-suit">♠</span>
-    <span id="hukum-suit-name" class="hukum-name">Spades</span>
+    <span id="hukum-suit-name" class="hukum-name hukum-black">Spades (Fixed)</span>
   </div>
   <div class="tabs-mini">
     <button class="tab-mini active" onclick="switchTab('play')" id="tab-play">🎮 Play</button>
@@ -216,14 +298,22 @@ input::placeholder{color:var(--muted);font-weight:600;}
 
   <!-- PLAY TAB -->
   <div id="gtab-play" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-    <div class="trick-area">
-      <div class="trick-label">Current Trick</div>
-      <div class="trick-cards" id="trick-cards-display"></div>
+    <!-- Table area with player seats -->
+    <div class="table-area">
+      <div class="round-table" id="round-table">
+        <div class="table-trick-label" id="trick-table-label">Current Trick</div>
+        <div class="table-cards" id="trick-cards-display"></div>
+        <!-- Seats injected by JS -->
+      </div>
     </div>
-    <div style="padding:10px 16px 0;">
+    <!-- Cards played this trick strip -->
+    <div class="cards-played-strip" id="cards-played-strip">
+      <span class="cards-played-label">TRICK:</span>
+    </div>
+    <div style="padding:8px 16px 0;">
       <div id="turn-banner"></div>
       <div id="redeal-banner" style="display:none;" class="redeal-banner">
-        <div><div class="redeal-banner-text" id="redeal-reason"></div><div class="redeal-votes" id="redeal-votes-label"></div></div>
+        <div><div class="redeal-banner-text" id="redeal-reason"></div></div>
         <button class="btn btn-sm" id="btn-redeal" style="background:rgba(155,89,182,.3);color:#c39bd3;border:1.5px solid rgba(155,89,182,.5);border-radius:50px;font-weight:800;white-space:nowrap;" onclick="requestRedeal()">🔀 Request Redeal</button>
       </div>
     </div>
@@ -235,7 +325,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
       <div class="hand-cards" id="my-hand-cards"></div>
     </div>
     <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-gold" id="btn-play-card" onclick="playSelectedCard()" disabled>Play Card</button>
+      <button class="btn btn-gold" id="btn-play-card" onclick="playSelectedCard()" disabled>▶ Play Card</button>
       <button class="btn btn-ghost btn-sm" onclick="sortHand()">Sort ♥♦♣♠</button>
     </div>
   </div>
@@ -300,75 +390,99 @@ input::placeholder{color:var(--muted);font-weight:600;}
     <button class="btn btn-ghost btn-full btn-sm" style="margin-top:14px;" onclick="document.getElementById('full-scores-modal').classList.remove('show')">Close</button>
   </div>
 </div>
-
-<!-- REDEAL CLAIM MODAL -->
 <div class="modal-bg" id="redeal-modal">
   <div class="modal-box">
     <h2 id="redeal-modal-title">🔀 Redeal Requested</h2>
     <p id="redeal-modal-desc" style="font-size:.83rem;color:var(--muted);margin-bottom:14px;text-align:center;"></p>
-    <!-- Claimant's revealed hand -->
     <div id="redeal-shown-hand" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:16px;"></div>
-    <!-- Verdict buttons (shown to non-claimants only) -->
     <div id="redeal-verdict-btns" style="display:none;gap:10px;flex-direction:column;">
-      <p style="font-size:.78rem;color:var(--muted);text-align:center;">Verify the hand above. Does this player truly have no Spades and no face cards?</p>
+      <p style="font-size:.78rem;color:var(--muted);text-align:center;">Verify the hand. No Spades and no face cards?</p>
       <div style="display:flex;gap:10px;">
-        <button class="btn btn-green btn-full" onclick="voteRedeal('approve')">✅ Approve Redeal</button>
+        <button class="btn btn-green btn-full" onclick="voteRedeal('approve')">✅ Approve</button>
         <button class="btn btn-red btn-full" onclick="voteRedeal('reject')">❌ Reject (Fake!)</button>
       </div>
     </div>
-    <!-- Host penalty button (shown when rejected) -->
     <div id="redeal-penalty-section" style="display:none;">
-      <p style="font-size:.83rem;color:var(--red);font-weight:700;text-align:center;margin-bottom:10px;">⚠️ Claim was rejected! Host: verify the hand and apply penalty if it was fake.</p>
+      <p style="font-size:.83rem;color:var(--red);font-weight:700;text-align:center;margin-bottom:10px;">⚠️ Rejected! Host: apply penalty if fake.</p>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-red btn-full" onclick="applyGhochiPenalty()">👻 Apply -50 Ghochi</button>
-        <button class="btn btn-ghost btn-full" onclick="dismissRedeal()">Dismiss / No Penalty</button>
+        <button class="btn btn-ghost btn-full" onclick="dismissRedeal()">Dismiss</button>
       </div>
     </div>
-    <!-- Waiting message -->
     <div id="redeal-waiting-msg" style="display:none;text-align:center;color:var(--muted);font-size:.83rem;font-weight:700;padding:8px 0;"></div>
-    <!-- Close (claimant only, before votes) -->
     <button id="redeal-cancel-btn" class="btn btn-ghost btn-full btn-sm" style="margin-top:10px;display:none;" onclick="cancelRedealRequest()">Cancel My Request</button>
+  </div>
+</div>
+
+<!-- TRICK WIN OVERLAY -->
+<div id="trick-win-overlay">
+  <div class="trick-win-inner">
+    <div class="trick-win-title" id="two-title">🏆 Trick Won!</div>
+    <div class="trick-win-cards" id="two-cards"></div>
+    <div class="trick-win-winner" id="two-winner"></div>
+  </div>
+</div>
+
+<!-- DEAL ANIMATION OVERLAY -->
+<div id="deal-overlay">
+  <div class="deal-title">Dealing Cards…</div>
+  <div class="deal-sub" id="deal-sub-text">Shuffling the deck</div>
+  <div class="deal-deck" id="deal-deck">
+    <div class="deal-card-anim"></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue, off, update, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getDatabase,ref,set,get,onValue,off,update,serverTimestamp}
+  from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ── FIREBASE CONFIG — replace with your own ──
-const firebaseConfig = {
-  apiKey: "AIzaSyAMjg4pKuuoP9s6Dyr4bWcXeo4d2q2gVR8",
-  authDomain: "ghochi-online.firebaseapp.com",
-  databaseURL: "https://ghochi-online-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ghochi-online",
-  storageBucket: "ghochi-online.firebasestorage.app",
-  messagingSenderId: "144945566295",
-  appId: "1:144945566295:web:2fe60b3d05e13399b34912"
+// ── FIREBASE CONFIG ──
+const firebaseConfig={
+  apiKey:"AIzaSyAMjg4pKuuoP9s6Dyr4bWcXeo4d2q2gVR8",
+  authDomain:"ghochi-online.firebaseapp.com",
+  databaseURL:"https://ghochi-online-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"ghochi-online",
+  storageBucket:"ghochi-online.firebasestorage.app",
+  messagingSenderId:"144945566295",
+  appId:"1:144945566295:web:2fe60b3d05e13399b34912"
 };
-
-const app = initializeApp(firebaseConfig);
-const db  = getDatabase(app);
+const app=initializeApp(firebaseConfig);
+const db=getDatabase(app);
 
 // ── CONSTANTS ──
-const TEAM_COLORS   = ["#e74c3c","#3498db","#2ecc71","#f5c518"];
-const TEAM_NAMES    = ["Team Red","Team Blue","Team Green","Team Gold"];
-const RANKS         = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
-const ALL_SUITS     = ["♠","♥","♦","♣"];
-const SUIT_MAP      = {H:"♥",D:"♦",C:"♣",S:"♠"};
-const SUIT_NAME_MAP = {"♥":"Hearts","♦":"Diamonds","♣":"Clubs","♠":"Spades"};
-const RED_SUITS     = ["♥","♦"];
+const TEAM_COLORS=["#e74c3c","#3498db","#2ecc71","#f5c518"];
+const DEFAULT_TEAM_NAMES=["Team Red","Team Blue","Team Green","Team Gold"];
+const RANKS=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+const ALL_SUITS=["♠","♥","♦","♣"];
+const RED_SUITS=["♥","♦"];
+const FACE_RANKS=["J","Q","K","A"];
+const FACE_ART={
+  "J♠":"🤴","J♥":"🥷","J♦":"🎭","J♣":"⚔️",
+  "Q♠":"👸","Q♥":"💃","Q♦":"🌹","Q♣":"🌙",
+  "K♠":"👑","K♥":"❤️","K♦":"💎","K♣":"♣️",
+  "A♠":"⭐","A♥":"💖","A♦":"💠","A♣":"🍀"
+};
+// Number pip layouts: count → grid rows of pips
+const PIP_LAYOUTS={
+  "2":[[0],[0]],"3":[[0],[0],[0]],"4":[[0,0],[0,0]],
+  "5":[[0,0],[0],[0,0]],"6":[[0,0],[0,0],[0,0]],
+  "7":[[0,0],[0],[0,0],[0,0]],"8":[[0,0],[0,0],[0,0],[0,0]],
+  "9":[[0,0],[0,0],[0],[0,0],[0,0]],"10":[[0,0],[0,0],[0,0],[0,0],[0,0]]
+};
 
 // ── STATE ──
-let myName="", myId="", roomCode="", roomRef=null, isHost=false;
-let gameState=null, selectedCard=null, blindOn=false, selectedSuit=null, handSorted=false;
-let unsubscribe=null, prevRound=null, prevPhase=null;
-const shownRounds = new Set();
+let myName="",myId="",roomCode="",roomRef=null,isHost=false;
+let gameState=null,selectedCard=null,blindOn=false,handSorted=false;
+let unsubscribe=null,prevRound=null,prevPhase=null,botMode="none";
+let trickWinTimeout=null,botTickInterval=null;
+const shownRounds=new Set();
+let blockPlay=false; // blocks input during trick-win animation
 
 // ── UTILS ──
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function genCode(){
   const c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from({length:5},()=>c[Math.floor(Math.random()*c.length)]).join("");
@@ -380,53 +494,199 @@ function showScreen(id){
 let toastTm;
 function toast(msg,err=false){
   const el=document.getElementById("toast");
-  el.textContent=msg; el.className="toast show"+(err?" err":"");
-  clearTimeout(toastTm); toastTm=setTimeout(()=>el.classList.remove("show"),3000);
+  el.textContent=msg;el.className="toast show"+(err?" err":"");
+  clearTimeout(toastTm);toastTm=setTimeout(()=>el.classList.remove("show"),3200);
+}
+function normArr(v,fallback=[]){
+  if(!v)return fallback;
+  if(Array.isArray(v))return v;
+  return Object.keys(v).sort((a,b)=>Number(a)-Number(b)).map(k=>v[k]);
 }
 
 // ── DECK ──
-function buildDeck(){
-  const d=[];
-  for(const s of ALL_SUITS) for(const r of RANKS) d.push(r+s);
-  return d;
-}
-function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function buildDeck(){const d=[];for(const s of ALL_SUITS)for(const r of RANKS)d.push(r+s);return d;}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function dealCards(teamReps){
-  const deck=shuffle(buildDeck());
-  const h={};
-  teamReps.forEach((pid,i)=>{ h[pid]=deck.slice(i*13,(i+1)*13); });
+  const deck=shuffle(buildDeck());const h={};
+  teamReps.forEach((pid,i)=>{h[pid]=deck.slice(i*13,(i+1)*13);});
   return h;
 }
-function parseCard(id){ const suit=id.slice(-1); const rank=id.slice(0,-1); return{suit,rank}; }
+function parseCard(id){const suit=id.slice(-1);const rank=id.slice(0,-1);return{suit,rank};}
 function sortCards(ids,trump){
-  return [...ids].sort((a,b)=>{
+  return[...ids].sort((a,b)=>{
     const ca=parseCard(a),cb=parseCard(b);
-    const at=ca.suit===trump?1:0, bt=cb.suit===trump?1:0;
-    if(at!==bt) return bt-at;
-    if(ca.suit!==cb.suit) return ALL_SUITS.indexOf(ca.suit)-ALL_SUITS.indexOf(cb.suit);
+    const at=ca.suit===trump?1:0,bt=cb.suit===trump?1:0;
+    if(at!==bt)return bt-at;
+    if(ca.suit!==cb.suit)return ALL_SUITS.indexOf(ca.suit)-ALL_SUITS.indexOf(cb.suit);
     return RANKS.indexOf(ca.rank)-RANKS.indexOf(cb.rank);
   });
 }
 
+// ── CARD RENDERING ── (proper designs with face art and pips)
+function makeCardEl(cid,opts={}){
+  const{small=false,disabled=false,faceDown=false,selected=false}=opts;
+  const c=parseCard(cid);
+  const isRed=RED_SUITS.includes(c.suit);
+  const isTrump=c.suit==="♠";
+  const isFace=FACE_RANKS.includes(c.rank);
+  const el=document.createElement("div");
+  const sz=small?"card card-sm":"card";
+  el.className=`${sz} card-${isRed?"red":"black"}${isTrump?" card-trump":""}${isFace&&!small?" card-face":""}${selected?" selected":""}${disabled?" disabled":""}`;
+
+  if(faceDown){
+    el.style.background="linear-gradient(135deg,#1a237e,#283593)";
+    el.innerHTML=`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${small?"1.2rem":"1.6rem"};opacity:.4;">🃏</div>`;
+    return el;
+  }
+
+  const suitSymbol=c.suit;
+  // Center area
+  let centerHTML="";
+  if(isFace){
+    const art=FACE_ART[c.rank+c.suit]||suitSymbol;
+    centerHTML=`<div class="card-face-art" style="font-size:${small?"1.1rem":"1.7rem"}">${art}</div>`;
+  } else if(c.rank==="A"){
+    centerHTML=`<div class="card-face-art" style="font-size:${small?"1.5rem":"2rem"}">${suitSymbol}</div>`;
+  } else {
+    // Number pip layout
+    const n=parseInt(c.rank)||0;
+    const rows=PIP_LAYOUTS[c.rank];
+    if(rows){
+      const pipRows=rows.map(row=>`<div style="display:flex;gap:${small?"3px":"5px"};justify-content:center;">${row.map(()=>`<span class="card-pip">${suitSymbol}</span>`).join("")}</div>`).join("");
+      centerHTML=`<div class="card-center-pips" style="font-size:${small?".55rem":".72rem"}">${pipRows}</div>`;
+    }else{
+      centerHTML=`<div class="card-face-art">${suitSymbol}</div>`;
+    }
+  }
+
+  el.innerHTML=`
+    <div class="card-top"><div class="card-rank">${c.rank}</div><div class="card-suit-sm">${suitSymbol}</div></div>
+    <div class="card-center-area">${centerHTML}</div>
+    <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit-sm">${suitSymbol}</div></div>`;
+  return el;
+}
+
+// ── BOT MODE ──
+window.setBotMode=function(m){
+  botMode=m;
+  document.getElementById("bot-none-btn").className="btn btn-ghost btn-sm"+(m==="none"?" btn-gold":"");
+  document.getElementById("bot-some-btn").className="btn btn-blue btn-sm"+(m==="some"?" ":" ");
+  document.getElementById("bot-solo-wrap").style.display=m==="some"?"block":"none";
+};
+window.startSoloGame=async function(){
+  myName=document.getElementById("player-name-input").value.trim();
+  if(!myName){toast("Enter your name first!",true);return;}
+  myId=uid();isHost=true;roomCode=genCode();
+  localStorage.setItem("ghochi_id_"+roomCode,myId);
+  roomRef=ref(db,"rooms/"+roomCode);
+  // Create 3 bots
+  const bots=[
+    {id:"bot_"+uid(),name:"Bot Alpha",team:1},
+    {id:"bot_"+uid(),name:"Bot Beta",team:2},
+    {id:"bot_"+uid(),name:"Bot Gamma",team:3},
+  ];
+  const players={[myId]:{name:myName,team:0,isBot:false}};
+  bots.forEach(b=>{players[b.id]={name:b.name,team:b.team,isBot:true};});
+  await set(roomRef,{
+    host:myId,phase:"waiting",createdAt:serverTimestamp(),
+    players,teams:DEFAULT_TEAM_NAMES.map(n=>({name:n,score:0})),
+    round:0,maxRounds:13,botMode:"solo"
+  });
+  document.getElementById("display-room-code").textContent=roomCode;
+  document.getElementById("btn-start-game").style.display="block";
+  toast("Solo game ready! You are on Team Red.");
+  listenRoom();
+  showScreen("waiting");
+  // Auto-start after short delay
+  setTimeout(()=>window.hostStartGame(),800);
+};
+
+// ── DEAL ANIMATION ──
+function showDealAnimation(cb){
+  const overlay=document.getElementById("deal-overlay");
+  overlay.classList.add("show");
+  document.getElementById("deal-sub-text").textContent="Shuffling the deck…";
+  let count=0;
+  const deck=document.getElementById("deal-deck");
+  // Directions for 4 seats
+  const dirs=[
+    "translate(-50px,-120px) rotate(-20deg)",
+    "translate(160px,-20px) rotate(15deg)",
+    "translate(-50px,120px) rotate(10deg)",
+    "translate(-160px,-20px) rotate(-15deg)"
+  ];
+  function flyCard(i){
+    if(i>=13*4){
+      setTimeout(()=>{overlay.classList.remove("show");if(cb)cb();},400);
+      return;
+    }
+    const el=document.createElement("div");
+    el.className="deal-card-anim deal-card-flying";
+    el.style.setProperty("--deal-to",dirs[i%4]);
+    el.style.animationDuration="0.38s";
+    deck.appendChild(el);
+    setTimeout(()=>{el.remove();flyCard(i+1);},90);
+  }
+  setTimeout(()=>{
+    document.getElementById("deal-sub-text").textContent="Dealing cards…";
+    flyCard(0);
+  },500);
+}
+
 // ── LISTEN ROOM ──
 function listenRoom(){
-  if(unsubscribe){ off(roomRef); unsubscribe=null; }
-  unsubscribe = onValue(roomRef, snap=>{
-    if(!snap.exists()) return;
-    const state = snap.val();
-    gameState = state;
+  if(unsubscribe){off(roomRef);unsubscribe=null;}
+  let connRef=ref(db,".info/connected");
+  onValue(connRef,snap=>{
+    const bar=document.getElementById("reconnect-bar");
+    if(bar)bar.classList.toggle("show",!snap.val());
+  });
+  let prevTrickWinner=null;
+  let dealShown=false;
+  unsubscribe=onValue(roomRef,snap=>{
+    if(!snap.exists())return;
+    const state=snap.val();
+    gameState=state;
     if(state.phase==="waiting"){
+      dealShown=false;
       showScreen("waiting");
       renderWaiting(state);
-    } else if(state.phase==="playing"){
-      if(prevPhase!=="playing") showScreen("game");
-      renderGame(state);
-      renderRedealModal(state);
-      if(prevRound!==null && state.round!==prevRound && state.roundResult && !shownRounds.has(state.round)){
-        shownRounds.add(state.round);
-        showRoundResult(state);
+    }else if(state.phase==="playing"){
+      if(prevPhase!=="playing"&&!dealShown){
+        dealShown=true;
+        showDealAnimation(()=>{showScreen("game");renderGame(state);});
+      }else{
+        showScreen("game");
+        // Trick win overlay: fire for ALL players when winner changes
+        const newWinner=state.lastTrickWinner;
+        const newWinCards=state.lastTrickCards;
+        if(newWinner&&newWinner!==prevTrickWinner&&newWinCards){
+          showTrickWinOverlay(newWinner,newWinCards,state,()=>{
+            renderGame(state);
+          });
+          prevTrickWinner=newWinner;
+        }else{
+          if(!blockPlay) renderGame(state);
+        }
       }
-    } else if(state.phase==="done"){
+      renderRedealModal(state);
+      if(prevRound!==null&&state.round!==prevRound&&state.roundResult&&!shownRounds.has(state.round)){
+        shownRounds.add(state.round);
+        // Delay round result until trick overlay clears
+        setTimeout(()=>showRoundResult(state),blockPlay?2400:0);
+      }
+      // Reset prevTrickWinner on new round; show deal animation for new round
+      if(prevRound!==null&&state.round!==prevRound){
+        prevTrickWinner=null;
+        if(state.round>1){
+          setTimeout(()=>{
+            showDealAnimation(()=>{renderGame(state);});
+          },2600); // after round result modal delay
+        }
+      }
+      // Bot tick
+      scheduleBotTick(state);
+    }else if(state.phase==="done"){
       showWinner(state);
     }
     prevPhase=state.phase;
@@ -435,41 +695,48 @@ function listenRoom(){
 }
 
 // ── CREATE ROOM ──
-window.createRoom = async function(){
+window.createRoom=async function(){
   myName=document.getElementById("player-name-input").value.trim();
-  if(!myName){ toast("Enter your name first!",true); return; }
-  myId=uid(); isHost=true; roomCode=genCode();
+  if(!myName){toast("Enter your name first!",true);return;}
+  myId=uid();isHost=true;roomCode=genCode();
+  localStorage.setItem("ghochi_id_"+roomCode,myId);
   roomRef=ref(db,"rooms/"+roomCode);
   await set(roomRef,{
-    host:myId, phase:"waiting", createdAt:serverTimestamp(),
-    players:{ [myId]:{name:myName,team:-1} },
-    teams:TEAM_NAMES.map(n=>({name:n,score:0})),
-    round:0, maxRounds:13
+    host:myId,phase:"waiting",createdAt:serverTimestamp(),
+    players:{[myId]:{name:myName,team:-1,isBot:false}},
+    teams:DEFAULT_TEAM_NAMES.map(n=>({name:n,score:0})),
+    round:0,maxRounds:13,botMode
   });
   document.getElementById("display-room-code").textContent=roomCode;
   document.getElementById("btn-start-game").style.display="block";
-  document.getElementById("waiting-status").textContent="You are the host. Everyone join a team, then start!";
-  toast("Room created! Share code: "+roomCode);
+  document.getElementById("waiting-status").textContent="You are the host. Assign teams then Start!";
+  toast("Room created! Code: "+roomCode);
   listenRoom();
+  showScreen("waiting");
 };
 
 // ── JOIN ROOM ──
-window.joinRoom = async function(){
+window.joinRoom=async function(){
   myName=document.getElementById("player-name-input").value.trim();
   const code=document.getElementById("join-code-input").value.trim().toUpperCase();
-  if(!myName){ toast("Enter your name!",true); return; }
-  if(!code){ toast("Enter room code!",true); return; }
+  if(!myName){toast("Enter your name!",true);return;}
+  if(!code){toast("Enter room code!",true);return;}
   const snap=await get(ref(db,"rooms/"+code));
-  if(!snap.exists()){ toast("Room not found!",true); return; }
+  if(!snap.exists()){toast("Room not found!",true);return;}
   const room=snap.val();
-  if(room.phase==="playing"||room.phase==="done"){ toast("Game already started!",true); return; }
-  myId=uid(); isHost=false; roomCode=code;
-  roomRef=ref(db,"rooms/"+code);
-  await update(ref(db,"rooms/"+code+"/players"),{ [myId]:{name:myName,team:-1} });
+  if(room.phase==="done"){toast("Game already finished!",true);return;}
+  myId=localStorage.getItem("ghochi_id_"+code)||uid();
+  localStorage.setItem("ghochi_id_"+code,myId);
+  isHost=room.host===myId;
+  roomCode=code;roomRef=ref(db,"rooms/"+code);
+  if(room.phase==="waiting"){
+    await update(ref(db,"rooms/"+code+"/players"),{[myId]:{name:myName,team:-1,isBot:false}});
+  }
   document.getElementById("display-room-code").textContent=code;
-  document.getElementById("btn-start-game").style.display="none";
+  if(isHost)document.getElementById("btn-start-game").style.display="block";
   toast("Joined room "+code+"!");
   listenRoom();
+  showScreen("waiting");
 };
 
 window.copyCode=function(){
@@ -481,49 +748,38 @@ function renderWaiting(state){
   const players=state.players||{};
   const pArr=Object.entries(players);
   document.getElementById("player-count-label").textContent=pArr.length+" player"+(pArr.length!==1?"s":"");
-
-  // Players list
   const pg=document.getElementById("players-waiting-grid");
   pg.innerHTML="";
   pArr.forEach(([pid,p])=>{
     const t=Number(p.team);
-    const div=document.createElement("div");
-    div.className="player-tile";
-    if(t>=0) div.style.borderColor=TEAM_COLORS[t];
+    const div=document.createElement("div");div.className="player-tile";
+    if(t>=0)div.style.borderColor=TEAM_COLORS[t];
     div.innerHTML=`
       ${pid===myId?'<div class="you-badge">YOU</div>':''}
+      ${p.isBot?'<div class="bot-badge">BOT</div>':''}
       <div class="ptname">${p.name}</div>
-      <div class="ptteam">${t>=0?`<span class="pill pill-${t}">${state.teams[t]?.name||"Team "+(t+1)}</span>`:"No team yet"}</div>
-    `;
+      <div class="ptteam">${t>=0?`<span class="pill pill-${t}">${state.teams[t]?.name||"Team "+(t+1)}</span>`:"No team"}</div>`;
     pg.appendChild(div);
   });
-
-  // Teams
-  const tg=document.getElementById("team-assign-grid");
-  tg.innerHTML="";
+  const tg=document.getElementById("team-assign-grid");tg.innerHTML="";
   (state.teams||[]).forEach((team,ti)=>{
-    const members=pArr.filter(([,p])=>Number(p.team)===ti).map(([,p])=>p.name);
+    const members=pArr.filter(([,p])=>Number(p.team)===ti).map(([,p])=>p.name+(p.isBot?" 🤖":""));
     const iAmHere=pArr.some(([pid,p])=>pid===myId&&Number(p.team)===ti);
-    const div=document.createElement("div");
-    div.className=`team-slot team-slot-${ti}`;
+    const div=document.createElement("div");div.className=`team-slot team-slot-${ti}`;
     div.innerHTML=`
-      <h4>${team.name}</h4>
+      <h4><input type="text" value="${team.name}" maxlength="16" onblur="renameTeam(${ti},this.value)" onclick="event.stopPropagation()" style="color:${TEAM_COLORS[ti]};width:100%;"/></h4>
       <div class="team-slot-members">${members.length?members.join(", "):"No one yet"}</div>
       ${iAmHere
         ?`<div style="color:var(--gold);font-size:.75rem;font-weight:800;margin-top:8px;">✓ You're here</div>`
         :`<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="joinTeam(${ti})">Join</button>`
-      }
-    `;
+      }`;
     tg.appendChild(div);
   });
-
-  // Host start check
   if(isHost){
     const allFilled=(state.teams||[]).every((_,ti)=>pArr.some(([,p])=>Number(p.team)===ti));
     const btn=document.getElementById("btn-start-game");
     btn.disabled=!allFilled;
-    document.getElementById("waiting-status").textContent=
-      allFilled?"All teams ready! Tap Start Game.":"Each team needs at least 1 player.";
+    document.getElementById("waiting-status").textContent=allFilled?"All teams ready! Tap Start Game.":"Each team needs at least 1 player.";
   }
 }
 
@@ -531,477 +787,294 @@ window.joinTeam=async function(ti){
   await update(ref(db,`rooms/${roomCode}/players/${myId}`),{team:ti});
   toast("Joined "+(gameState?.teams?.[ti]?.name||"Team "+(ti+1))+"!");
 };
+window.renameTeam=async function(ti,val){
+  const name=val.trim()||DEFAULT_TEAM_NAMES[ti];
+  await update(ref(db,`rooms/${roomCode}/teams/${ti}`),{name});
+};
 
+// ── HOST START GAME ──
 window.hostStartGame=async function(){
   const state=gameState;
   const players=state.players||{};
   const pArr=Object.entries(players);
   for(let ti=0;ti<4;ti++){
-    if(!pArr.some(([,p])=>Number(p.team)===ti)){ toast("Team "+(ti+1)+" is empty!",true); return; }
+    if(!pArr.some(([,p])=>Number(p.team)===ti)){
+      // Auto-fill with bot if botMode allows
+      if(botMode==="some"||state.botMode==="solo"||state.botMode==="some"){
+        const botId="bot_"+uid();
+        const botNames=["Bot Alpha","Bot Beta","Bot Gamma","Bot Delta"];
+        await update(ref(db,`rooms/${roomCode}/players`),{[botId]:{name:botNames[ti],team:ti,isBot:true}});
+        pArr.push([botId,{name:botNames[ti],team:ti,isBot:true}]);
+      }else{
+        toast("Team "+(ti+1)+" is empty!",true);return;
+      }
+    }
   }
   const reps=[];
   for(let ti=0;ti<4;ti++){
     const tp=pArr.filter(([,p])=>Number(p.team)===ti).map(([pid])=>pid);
     reps.push(tp[0]);
   }
-  // reps[0..3] are the 4 team representatives in team order (one per team).
-  // Store this stable turn order so every client uses the same sequence.
-  const turnOrder=reps; // [team0rep, team1rep, team2rep, team3rep]
+  const turnOrder=reps;
   const hands=dealCards(reps);
   const allHands={};
-  pArr.forEach(([pid,p])=>{ allHands[pid]=hands[reps[Number(p.team)]]; });
+  pArr.forEach(([pid,p])=>{allHands[pid]=hands[reps[Number(p.team)]];});
   await update(roomRef,{
-    phase:"playing", round:1, hukum:"S",
-    hands:allHands, declarations:{},
-    turnOrder:turnOrder,
-    currentTrick:{cards:{},leader:reps[0],turn:reps[0]},
+    phase:"playing",round:1,hukum:"S",
+    hands:allHands,declarations:{},
+    turnOrder,
+    currentTrick:{cards:{placeholder:null},leader:reps[0],turn:reps[0]},
     teamTricks:{"0":0,"1":0,"2":0,"3":0},
-    roundHistory:[],
+    roundHistory:[],lastTrickCards:null,lastTrickWinner:null,
   });
 };
 
 // ── RENDER GAME ──
 function renderGame(state){
-  // Normalize turnOrder: Firebase returns stored arrays as {0:v,1:v,...} objects
-  if(state.turnOrder && !Array.isArray(state.turnOrder)){
-    state.turnOrder=Object.keys(state.turnOrder).sort().map(k=>state.turnOrder[k]);
-  }
+  // Normalize turnOrder always
+  state.turnOrder=normArr(state.turnOrder);
   const round=state.round||1;
   document.getElementById("game-round-label").textContent=`Round ${round} / ${state.maxRounds||13}`;
-
-  // Mini scores
-  const sm=document.getElementById("scores-mini");
-  sm.innerHTML="";
+  const sm=document.getElementById("scores-mini");sm.innerHTML="";
   (state.teams||[]).forEach((t,ti)=>{
     const sc=t.score||0;
-    const d=document.createElement("div"); d.className="gsm-item";
-    d.innerHTML=`<div class="gsm-name">${t.name.split(" ")[1]||t.name}</div>
-      <div class="gsm-score ${sc>=0?"gsm-pos":"gsm-neg"}">${sc>0?"+":""}${sc}</div>`;
+    const d=document.createElement("div");d.className="gsm-item";
+    d.innerHTML=`<div class="gsm-name">${(t.name||"").split(" ").pop()}</div><div class="gsm-score ${sc>=0?"gsm-pos":"gsm-neg"}">${sc>0?"+":""}${sc}</div>`;
     sm.appendChild(d);
   });
-
-  // Hukum bar — always Spades (♠), always visible
-  document.getElementById("hukum-bar").style.display="flex";
-  document.getElementById("hukum-suit-icon").textContent="♠";
-  document.getElementById("hukum-suit-icon").className="hukum-suit hukum-black";
-  document.getElementById("hukum-suit-name").textContent="Spades (Fixed Trump)";
-  document.getElementById("hukum-suit-name").className="hukum-name hukum-black";
-
-  // My hand
   const myHand=state.hands?.[myId]||[];
   document.getElementById("hand-count").textContent=myHand.length;
+  renderTableArea(state);
   renderHand(myHand,state);
-  renderTrick(state);
   renderTurnBanner(state);
   renderRedealBanner(state);
-
-  // Trick stats
+  renderCardsPlayedStrip(state);
   const myT=myTeamIdx(state);
-  document.getElementById("trick-stats").textContent=
-    `♠ Team tricks: ${state.teamTricks?.[myT]||0}`;
-
+  document.getElementById("trick-stats").textContent=`♠ Tricks: ${state.teamTricks?.[myT]||0}`;
   renderDeclareTab(state);
   renderScoresTab(state);
   renderDeclTable(state);
 }
 
-function myTeamIdx(state){ return Number(state?.players?.[myId]?.team??-1); }
+function myTeamIdx(state){return Number(state?.players?.[myId]?.team??-1);}
+function getHukumSuit(){return"♠";}
 
-function getHukumSuit(state){
-  if(!state.hukum) return null;
-  return SUIT_MAP[state.hukum]||state.hukum;
-}
-
-function renderHand(cards,state){
-  const con=document.getElementById("my-hand-cards");
-  con.innerHTML="";
-  const trump=getHukumSuit(state);
-  const trick=state.currentTrick||{};
-  // Safety: normalize turnOrder in case Firebase returned it as object
-  if(state.turnOrder && !Array.isArray(state.turnOrder)){
-    state.turnOrder=Object.keys(state.turnOrder).sort().map(k=>state.turnOrder[k]);
-  }
-  const trickCards=trick.cards||{};
-  const ledSuit=Object.keys(trickCards).length>0?parseCard(Object.values(trickCards)[0]).suit:null;
-
-  let display=handSorted&&trump?sortCards(cards,trump):cards;
-  display.forEach(cid=>{
-    const c=parseCard(cid);
-    const isRed=RED_SUITS.includes(c.suit);
-    const isTrump=trump&&c.suit===trump;
-    const isSelected=selectedCard===cid;
-    let disabled=trick.turn!==myId;
-    if(!disabled&&ledSuit){
-      const hasLed=cards.some(id=>parseCard(id).suit===ledSuit);
-      if(hasLed&&c.suit!==ledSuit) disabled=true;
-    }
-    const el=document.createElement("div");
-    el.className=`card card-${isRed?"red":"black"}${isTrump?" card-trump":""}${isSelected?" selected":""}${disabled?" disabled":""}`;
-    el.innerHTML=`<div><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>
-      <div class="card-center">${c.suit}</div>
-      <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>`;
-  if(!disabled) el.onclick=()=>{ selectedCard=selectedCard===cid?null:cid; renderHand(cards,state); };
-    // Restore visual selection if selectedCard is still valid
-    if(isSelected && trick.turn===myId) el.classList.add("selected");
-    con.appendChild(el);
-  });
-  const isMyTurn = trick.turn===myId;
-  // If it's no longer our turn (another player played), clear any stale selection
-  if(!isMyTurn) selectedCard=null;
-  document.getElementById("btn-play-card").disabled = !isMyTurn;
-}
-
-function renderTrick(state){
-  const con=document.getElementById("trick-cards-display");
-  con.innerHTML="";
+// ── TABLE AREA (round table with seats) ──
+function renderTableArea(state){
+  const table=document.getElementById("round-table");
   const trick=state.currentTrick||{};
   const cards=trick.cards||{};
   const players=state.players||{};
+  const turnOrder=state.turnOrder||[];
+  // Remove old seats
+  table.querySelectorAll(".player-seat").forEach(s=>s.remove());
+  // My index in turnOrder
+  const myIdx=turnOrder.indexOf(myId);
+  // Seat positions: bottom=me, top=opposite, left/right=others
+  const seatPositions=["seat-bottom","seat-right","seat-top","seat-left"];
+  turnOrder.forEach((pid,i)=>{
+    const offset=(i-myIdx+turnOrder.length)%turnOrder.length;
+    const pos=seatPositions[offset];
+    const p=players[pid]||{};
+    const isActive=trick.turn===pid;
+    const seat=document.createElement("div");
+    seat.className="player-seat "+pos;
+    const nameClass=`seat-name${isActive?" active-turn":""}${pid===myId?" my-seat":""}`;
+    const cardCount=(state.hands?.[pid]||[]).length;
+    seat.innerHTML=`<div class="${nameClass}">${p.name||"?"}${p.isBot?'<span class="bot-tag">BOT</span>':""}</div><div class="seat-cards-count">${cardCount} cards</div>`;
+    table.appendChild(seat);
+  });
+  // Render trick cards on table
+  const trickCon=document.getElementById("trick-cards-display");
+  trickCon.innerHTML="";
+  const trickWinner=state.lastTrickWinner;
   Object.entries(cards).forEach(([pid,cid])=>{
-    const c=parseCard(cid);
-    const isRed=RED_SUITS.includes(c.suit);
-    const trump=getHukumSuit(state);
-    const isTrump=trump&&c.suit===trump;
+    if(!cid||pid==="placeholder")return;
+    const wrap=document.createElement("div");wrap.className="trick-card-wrap";
+    const cardEl=makeCardEl(cid,{small:true});
+    cardEl.style.cursor="default";
     const pname=players[pid]?.name||"?";
-    const div=document.createElement("div"); div.className="trick-card-played";
-    div.innerHTML=`<div class="card card-${isRed?"red":"black"}${isTrump?" card-trump":""}" style="cursor:default">
-      <div><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>
-      <div class="card-center">${c.suit}</div>
-      <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>
-    </div><div class="player-name-small">${pname}</div>`;
-    con.appendChild(div);
+    const nameEl=document.createElement("div");nameEl.className="player-name-small";nameEl.textContent=pname;
+    wrap.appendChild(cardEl);wrap.appendChild(nameEl);
+    trickCon.appendChild(wrap);
   });
 }
 
+// ── CARDS PLAYED STRIP (all cards played in current trick, visible to all) ──
+function renderCardsPlayedStrip(state){
+  const strip=document.getElementById("cards-played-strip");
+  strip.innerHTML=`<span class="cards-played-label">TRICK:</span>`;
+  const trick=state.currentTrick||{};
+  const cards=trick.cards||{};
+  const players=state.players||{};
+  let count=0;
+  Object.entries(cards).forEach(([pid,cid])=>{
+    if(!cid||pid==="placeholder")return;
+    count++;
+    const c=parseCard(cid);
+    const isRed=RED_SUITS.includes(c.suit);
+    const pname=(players[pid]?.name||"?").split(" ")[0];
+    const span=document.createElement("span");
+    span.className="played-mini "+(isRed?"played-mini-red":"played-mini-black");
+    span.title=players[pid]?.name||"?";
+    span.textContent=`${pname}: ${c.rank}${c.suit}`;
+    strip.appendChild(span);
+  });
+  if(count===0){
+    const empty=document.createElement("span");
+    empty.style.cssText="font-size:.7rem;color:var(--muted);";
+    empty.textContent="No cards played yet";
+    strip.appendChild(empty);
+  }
+}
+
+// ── HAND RENDERING ──
+function renderHand(cards,state){
+  const con=document.getElementById("my-hand-cards");
+  con.innerHTML="";
+  if(!cards.length){return;}
+  const trump=getHukumSuit();
+  const trick=state.currentTrick||{};
+  state.turnOrder=normArr(state.turnOrder);
+  const trickCards=trick.cards||{};
+  const leaderCard=trick.leader&&trickCards[trick.leader]?trickCards[trick.leader]:null;
+  const ledSuit=leaderCard?parseCard(leaderCard).suit:null;
+  const isMyTurn=trick.turn===myId&&!blockPlay;
+  let display=handSorted?sortCards(cards,trump):cards;
+  display.forEach(cid=>{
+    const c=parseCard(cid);
+    let disabled=!isMyTurn;
+    if(!disabled&&ledSuit){
+      const hasLed=cards.some(id=>parseCard(id).suit===ledSuit);
+      // ── TRUMP RULE: if player has led-suit, they CANNOT play trump (unless led-suit IS trump) ──
+      if(hasLed){
+        if(c.suit!==ledSuit)disabled=true; // must follow suit
+      }else{
+        // No led suit card: can play anything EXCEPT — actually in Ghochi you CAN play trump freely when void
+        // (no restriction when void of led suit)
+      }
+    }
+    const isSelected=selectedCard===cid;
+    const el=makeCardEl(cid,{disabled,selected:isSelected});
+    if(!disabled){
+      el.onclick=(()=>{
+        const cardId=cid;
+        return function(){
+          con.querySelectorAll(".card").forEach(c=>c.classList.remove("selected"));
+          if(selectedCard===cardId){selectedCard=null;}
+          else{selectedCard=cardId;this.classList.add("selected");}
+        };
+      })();
+    }
+    con.appendChild(el);
+  });
+  document.getElementById("btn-play-card").disabled=!isMyTurn;
+}
+
+// ── TURN BANNER ──
 function renderTurnBanner(state){
   const el=document.getElementById("turn-banner");
   const trick=state.currentTrick||{};
-  if(trick.turn===myId){ el.className="turn-banner"; el.textContent="🃏 Your turn! Select a card and tap Play."; }
-  else{
-    const name=state.players?.[trick.turn]?.name||trick.turn||"...";
-    el.className="waiting-banner"; el.textContent=`⏳ Waiting for ${name} to play…`;
+  if(trick.turn===myId&&!blockPlay){
+    el.className="turn-banner";el.textContent="🃏 Your turn! Select a card and tap Play.";
+  }else{
+    const name=state.players?.[trick.turn]?.name||"...";
+    const isBot=state.players?.[trick.turn]?.isBot;
+    el.className="waiting-banner";
+    el.textContent=`⏳ Waiting for ${name}${isBot?" 🤖":""}…`;
   }
 }
 
-// ── REDEAL ──
-const FACE_RANKS = ["J","Q","K","A"];
-
-function handQualifiesRedeal(cards){
-  const hasSpade = cards.some(c=>parseCard(c).suit==="♠");
-  const hasFace  = cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
-  return !hasSpade || !hasFace; // eligible if missing spades OR face cards
-}
-
-function handIsActuallyFake(cards){
-  // Returns true if the claim was dishonest (they DO have spades AND face cards)
-  const hasSpade = cards.some(c=>parseCard(c).suit==="♠");
-  const hasFace  = cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
-  return hasSpade && hasFace;
-}
-
-function renderRedealBanner(state){
-  const banner = document.getElementById("redeal-banner");
-  const reasonEl = document.getElementById("redeal-reason");
-  const votesEl  = document.getElementById("redeal-votes-label");
-  const btn      = document.getElementById("btn-redeal");
-  if(!banner) return;
-
-  const claim = state.redealClaim;
-  // If a claim is already active, hide the banner (modal handles it)
-  if(claim){ banner.style.display="none"; return; }
-
-  // No tricks played yet = start of round only
-  const trickCards = state.currentTrick?.cards||{};
-  const totalTricks = Object.values(state.teamTricks||{}).reduce((a,b)=>a+Number(b),0);
-  if(totalTricks > 0 || Object.keys(trickCards).length > 0){
-    banner.style.display="none"; return;
-  }
-
-  const myHand = state.hands?.[myId]||[];
-  const hasSpade = myHand.some(c=>parseCard(c).suit==="♠");
-  const hasFace  = myHand.some(c=>FACE_RANKS.includes(parseCard(c).rank));
-
-  if(!hasSpade && !hasFace){
-    reasonEl.textContent = "🚫 You have NO Spades and NO face cards!";
-    btn.textContent = "🔀 Request Redeal";
-    btn.disabled = false;
-    banner.style.display = "flex";
-  } else if(!hasSpade){
-    reasonEl.textContent = "🚫 You have NO Spades (Hukum)!";
-    btn.textContent = "🔀 Request Redeal";
-    btn.disabled = false;
-    banner.style.display = "flex";
-  } else if(!hasFace){
-    reasonEl.textContent = "🚫 You have NO face cards (J/Q/K/A)!";
-    btn.textContent = "🔀 Request Redeal";
-    btn.disabled = false;
-    banner.style.display = "flex";
-  } else {
-    banner.style.display = "none";
-  }
-}
-
-function renderRedealModal(state){
-  const claim = state.redealClaim;
-  const modal = document.getElementById("redeal-modal");
-  if(!claim){ modal.classList.remove("show"); return; }
-
-  modal.classList.add("show");
-  const claimantName = state.players?.[claim.pid]?.name || "Someone";
-  const claimantTeam = Number(state.players?.[claim.pid]?.team??-1);
-  const teamName = state.teams?.[claimantTeam]?.name || "";
-  const cards = claim.hand || [];
-  const status = claim.status || "pending"; // pending | approved | rejected | penalised
-
-  // Title
-  document.getElementById("redeal-modal-title").textContent =
-    status==="penalised" ? "👻 Ghochi Penalty Applied!" :
-    status==="rejected"  ? "❌ Redeal Rejected!" :
-    status==="approved"  ? "✅ Redeal Approved!" :
-    "🔀 Redeal Requested";
-
-  // Description
-  let reasonText = "";
-  const hasSpade = cards.some(c=>parseCard(c).suit==="♠");
-  const hasFace  = cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
-  if(!hasSpade && !hasFace) reasonText = "no Spades and no face cards";
-  else if(!hasSpade) reasonText = "no Spades (Hukum)";
-  else if(!hasFace)  reasonText = "no face cards (J/Q/K/A)";
-  else reasonText = "⚠️ FAKE — they have both Spades and face cards!";
-
-  document.getElementById("redeal-modal-desc").innerHTML =
-    `<span class="pill pill-${claimantTeam}">${claimantName} (${teamName})</span><br>Claims to have <strong>${reasonText}</strong>. Hand shown below:`;
-
-  // Revealed hand
-  const handCon = document.getElementById("redeal-shown-hand");
-  handCon.innerHTML = "";
-  cards.forEach(cid=>{
-    const c = parseCard(cid);
-    const isRed = RED_SUITS.includes(c.suit);
-    const isTrump = c.suit==="♠";
-    const isFace = FACE_RANKS.includes(c.rank);
-    const el = document.createElement("div");
-    el.className = `card card-${isRed?"red":"black"}${isTrump?" card-trump":""}`;
+// ── TRICK WIN OVERLAY ──
+function showTrickWinOverlay(winnerPid,trickCards,state,cb){
+  blockPlay=true;
+  const overlay=document.getElementById("trick-win-overlay");
+  const wname=state.players?.[winnerPid]?.name||"?";
+  const wteam=Number(state.players?.[winnerPid]?.team??-1);
+  const tname=state.teams?.[wteam]?.name||"";
+  document.getElementById("two-title").textContent=`🏆 ${wname} wins!`;
+  document.getElementById("two-winner").textContent=`${tname} takes the trick`;
+  const cardsCon=document.getElementById("two-cards");
+  cardsCon.innerHTML="";
+  Object.values(trickCards).forEach(cid=>{
+    if(!cid||cid==="placeholder")return;
+    const el=makeCardEl(cid,{small:true});
     el.style.cursor="default";
-    // Highlight suspicious cards (spades or face) in red outline
-    if(isTrump||isFace) el.style.outline="2.5px solid var(--red)";
-    el.innerHTML = `<div><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>
-      <div class="card-center">${c.suit}</div>
-      <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit">${c.suit}</div></div>`;
-    handCon.appendChild(el);
+    cardsCon.appendChild(el);
   });
-
-  const iAmClaimant = claim.pid === myId;
-  const votes = claim.votes || {};
-  const allPids = Object.keys(state.players||{});
-  const otherPids = allPids.filter(p=>p!==claim.pid);
-  const approveCount = Object.values(votes).filter(v=>v==="approve").length;
-  const rejectCount  = Object.values(votes).filter(v=>v==="reject").length;
-  const myVote = votes[myId];
-
-  // Show/hide sections based on status and role
-  const verdictBtns   = document.getElementById("redeal-verdict-btns");
-  const penaltySection= document.getElementById("redeal-penalty-section");
-  const waitingMsg    = document.getElementById("redeal-waiting-msg");
-  const cancelBtn     = document.getElementById("redeal-cancel-btn");
-
-  verdictBtns.style.display    = "none";
-  penaltySection.style.display = "none";
-  waitingMsg.style.display     = "none";
-  cancelBtn.style.display      = "none";
-
-  if(status==="pending"){
-    if(iAmClaimant){
-      waitingMsg.style.display = "block";
-      waitingMsg.textContent = `Waiting for others to verify… (${approveCount} approve, ${rejectCount} reject out of ${otherPids.length})`;
-      cancelBtn.style.display = "block";
-    } else {
-      if(!myVote){
-        verdictBtns.style.display = "flex";
-      } else {
-        waitingMsg.style.display = "block";
-        waitingMsg.textContent = `You voted: ${myVote==="approve"?"✅ Approve":"❌ Reject"}. Waiting for others… (${approveCount}✅ ${rejectCount}❌ / ${otherPids.length})`;
-      }
-    }
-  } else if(status==="rejected"){
-    if(isHost){
-      penaltySection.style.display = "block";
-    } else {
-      waitingMsg.style.display = "block";
-      waitingMsg.textContent = "Claim rejected! Waiting for host to decide penalty…";
-    }
-  } else if(status==="approved"){
-    waitingMsg.style.display = "block";
-    waitingMsg.textContent = "✅ All approved! Redealing cards…";
-  } else if(status==="penalised"){
-    waitingMsg.style.display = "block";
-    waitingMsg.textContent = `👻 ${claimantName}'s team gets -50 Ghochi penalty for fake redeal!`;
-    // Auto-close after 4s
-    setTimeout(()=>{ modal.classList.remove("show"); }, 4000);
-  }
-}
-
-window.requestRedeal = async function(){
-  const state = gameState;
-  if(!state) return;
-  const myHand = state.hands?.[myId]||[];
-  if(!handQualifiesRedeal(myHand)){ toast("You don't qualify for a redeal!",true); return; }
-  const totalTricks = Object.values(state.teamTricks||{}).reduce((a,b)=>a+Number(b),0);
-  if(totalTricks>0){ toast("Redeal only allowed before any trick is played!",true); return; }
-  // Store claim with revealed hand in Firebase
-  await update(roomRef,{
-    redealClaim:{ pid:myId, hand:myHand, status:"pending", votes:{} }
-  });
-  toast("Redeal requested — your hand is now visible to all!");
-};
-
-window.cancelRedealRequest = async function(){
-  const state = gameState;
-  if(state?.redealClaim?.pid!==myId){ return; }
-  await update(roomRef,{ redealClaim:null });
-  toast("Redeal request cancelled.");
-};
-
-window.voteRedeal = async function(vote){
-  const state = gameState;
-  const claim = state?.redealClaim;
-  if(!claim||claim.pid===myId) return;
-  const allPids = Object.keys(state.players||{});
-  const otherPids = allPids.filter(p=>p!==claim.pid);
-  const updates = {};
-  updates[`rooms/${roomCode}/redealClaim/votes/${myId}`] = vote;
-
-  // Calculate what votes will look like after this one
-  const newVotes = {...(claim.votes||{}), [myId]:vote};
-  const approveCount = Object.values(newVotes).filter(v=>v==="approve").length;
-  const rejectCount  = Object.values(newVotes).filter(v=>v==="reject").length;
-
-  if(rejectCount > 0){
-    // Any reject = rejected immediately
-    updates[`rooms/${roomCode}/redealClaim/status`] = "rejected";
-  } else if(approveCount >= otherPids.length){
-    // All others approved → execute redeal
-    updates[`rooms/${roomCode}/redealClaim/status`] = "approved";
-    // Redeal cards — normalize turnOrder from Firebase object to array
-    const rawReps = state.turnOrder||[];
-    const reps = Array.isArray(rawReps)?rawReps:Object.keys(rawReps).sort().map(k=>rawReps[k]);
-    const newH = dealCards(reps);
-    Object.keys(state.players||{}).forEach(pid=>{
-      const rep = reps[Number(state.players[pid].team)];
-      updates[`rooms/${roomCode}/hands/${pid}`] = newH[rep];
-    });
-    updates[`rooms/${roomCode}/declarations`] = {};
-    updates[`rooms/${roomCode}/teamTricks`] = {"0":0,"1":0,"2":0,"3":0};
-    updates[`rooms/${roomCode}/currentTrick`] = {cards:{},leader:state.currentTrick?.leader||reps[0],turn:state.currentTrick?.leader||reps[0]};
-    // Clear claim after short delay via a flag; we'll clear it on next render after approved
-    setTimeout(async()=>{
-      await update(roomRef,{ redealClaim:null });
-      toast("Cards redealt! 🔀");
-    }, 2500);
-  }
-
-  await update(ref(db,"/"), updates);
-};
-
-window.applyGhochiPenalty = async function(){
-  const state = gameState;
-  if(!isHost){ toast("Only host can apply penalty!",true); return; }
-  const claim = state?.redealClaim;
-  if(!claim) return;
-  const claimantTeam = Number(state.players?.[claim.pid]?.team??-1);
-  if(claimantTeam<0) return;
-  const teams = (state.teams||[]).map((t,ti)=>{
-    if(ti===claimantTeam) return {...t, score:(t.score||0)-50};
-    return t;
-  });
-  await update(roomRef,{
-    teams,
-    "redealClaim/status":"penalised"
-  });
-  toast(`👻 -50 Ghochi applied to ${state.teams[claimantTeam]?.name}!`,true);
-  setTimeout(async()=>{ await update(roomRef,{redealClaim:null}); }, 4000);
-};
-
-window.dismissRedeal = async function(){
-  if(!isHost){ toast("Only host can dismiss!",true); return; }
-  await update(roomRef,{ redealClaim:null });
-  toast("Redeal dismissed. Game continues.");
-};
-
-// ── DECLARE ──
-function renderDeclareTab(state){
-  const decls=state.declarations||{};
-  const players=state.players||{};
-  const myTeam=myTeamIdx(state);
-  const myTeamPids=Object.keys(players).filter(pid=>Number(players[pid].team)===myTeam);
-  const myTeamDeclared=myTeamPids.some(pid=>decls[pid]);
-  // Hukum is always Spades — no chooser needed
-  document.getElementById("my-declare-section").style.display=(!myTeamDeclared)?"block":"none";
-}
-
-window.toggleBlind=function(){
-  blindOn=!blindOn;
-  document.getElementById("blind-track").classList.toggle("on",blindOn);
-  const inp=document.getElementById("declare-input");
-  if(blindOn){inp.min=5;if(parseInt(inp.value)<5)inp.value=5;}
-  else inp.min=2;
-};
-window.submitDeclaration=async function(){
-  const amount=parseInt(document.getElementById("declare-input").value);
-  if(isNaN(amount)){toast("Enter a number!",true);return;}
-  if(blindOn&&amount<5){toast("Blind needs ≥5!",true);return;}
-  if(!blindOn&&amount<2){toast("Min is 2!",true);return;}
-  if(amount>13){toast("Max is 13!",true);return;}
-  await update(ref(db,`rooms/${roomCode}/declarations`),{[myId]:{amount,blind:blindOn}});
-  toast("Declared "+amount+(blindOn?" (Blind)":"")+"! 🎯");
-};
-
-function renderDeclTable(state){
-  const tbody=document.getElementById("declarations-tbody");
-  tbody.innerHTML="";
-  const decls=state.declarations||{};
-  const players=state.players||{};
-  (state.teams||[]).forEach((team,ti)=>{
-    const tp=Object.entries(players).filter(([,p])=>Number(p.team)===ti);
-    const declared=tp.find(([pid])=>decls[pid]);
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td><span class="pill pill-${ti}">${team.name}</span></td>
-      <td>${declared?decls[declared[0]]?.amount:"—"}</td>
-      <td>${declared&&decls[declared[0]]?.blind?'<span class="pill blind-badge">🙈</span>':"—"}</td>
-      <td>${state.hukum?(state.teamTricks?.[ti]??0):"—"}</td>`;
-    tbody.appendChild(tr);
-  });
+  overlay.classList.add("show");
+  if(trickWinTimeout)clearTimeout(trickWinTimeout);
+  trickWinTimeout=setTimeout(()=>{
+    overlay.classList.remove("show");
+    blockPlay=false;
+    if(cb)cb();
+  },2200);
 }
 
 // ── PLAY CARD ──
 window.playSelectedCard=async function(){
   if(!selectedCard){toast("Select a card first!",true);return;}
+  if(blockPlay){toast("Wait…",true);return;}
   const state=gameState;
   const trick=state.currentTrick||{};
   if(trick.turn!==myId){toast("Not your turn!",true);return;}
-  const myHand=[...(state.hands?.[myId]||[])];
-  const idx=myHand.indexOf(selectedCard);
-  if(idx<0){toast("Card not in hand!",true);return;}
+  await doPlayCard(myId,selectedCard,state);
+  selectedCard=null;
+};
+
+async function doPlayCard(pid,cardToPlay,state){
+  state.turnOrder=normArr(state.turnOrder);
+  const trick=state.currentTrick||{};
+  const origHand=[...(state.hands?.[pid]||[])]; // snapshot BEFORE splice
+  const myHand=[...origHand];
+  const idx=myHand.indexOf(cardToPlay);
+  if(idx<0){console.error("Card not in hand",pid,cardToPlay);return;}
   myHand.splice(idx,1);
-  // Normalize trick.cards from Firebase (may be object or null)
-  const existingCards=trick.cards||{};
-  const trickCards={...existingCards,[myId]:selectedCard};
-  // Firebase stores arrays as objects {0:pid,1:pid,...} — always normalize to real JS array
-  const rawOrder=state.turnOrder||Object.keys(state.players||{});
-  const turnOrder=Array.isArray(rawOrder)?rawOrder:Object.keys(rawOrder).sort().map(k=>rawOrder[k]);
-  const myIdx=turnOrder.indexOf(myId);
+
+  // Validate trump rule
+  const trickCardsNow=trick.cards||{};
+  const leaderCard=trick.leader&&trickCardsNow[trick.leader]?trickCardsNow[trick.leader]:null;
+  const ledSuit=leaderCard?parseCard(leaderCard).suit:null;
+  if(ledSuit&&pid===myId){
+    // origHand is the full hand including the card being played
+    const origHasLed=origHand.some(id=>parseCard(id).suit===ledSuit);
+    if(origHasLed&&parseCard(cardToPlay).suit!==ledSuit){
+      toast("Must follow suit! You have "+ledSuit+" cards.",true);
+      return;
+    }
+    // Trump restriction: cannot play Spades if player holds the led suit (and led suit ≠ spades)
+    if(origHasLed&&parseCard(cardToPlay).suit==="♠"&&ledSuit!=="♠"){
+      toast("Cannot play Hukum (♠) — you have "+ledSuit+" cards!",true);
+      return;
+    }
+  }
+
+  const trickCards={...trickCardsNow,[pid]:cardToPlay};
+  // Remove placeholder sentinel (used because Firebase drops empty objects)
+  delete trickCards["placeholder"];
+  const turnOrder=state.turnOrder;
+  const myIdx=turnOrder.indexOf(pid);
+  if(myIdx<0){console.error("Player not in turnOrder!",pid,turnOrder);return;}
   const nextPid=turnOrder[(myIdx+1)%turnOrder.length];
-  const allPlayed=Object.keys(trickCards).length>=turnOrder.length;
+  // Count only real player IDs (those present in turnOrder)
+  const playedCount=turnOrder.filter(p=>trickCards[p]).length;
+  const allPlayed=playedCount>=turnOrder.length;
+  console.log("[PLAY]",pid,"card=",cardToPlay,"myIdx=",myIdx,"next=",nextPid,"played=",playedCount+"/"+turnOrder.length,"allPlayed=",allPlayed);
+
   const updates={};
-  updates[`rooms/${roomCode}/hands/${myId}`]=myHand;
+  updates[`rooms/${roomCode}/hands/${pid}`]=myHand;
+  updates[`rooms/${roomCode}/currentTrick/cards/${pid}`]=cardToPlay;
 
   if(allPlayed){
-    const trump=getHukumSuit(state);
-    const winner=resolveTrick(trickCards,trick.leader,trump,state.players);
+    const trump=getHukumSuit();
+    const winner=resolveTrick(trickCards,trick.leader,trump);
     const winTeam=Number(state.players[winner].team);
     const teamTricks={...(state.teamTricks||{})};
     teamTricks[winTeam]=(Number(teamTricks[winTeam])||0)+1;
     const total=Object.values(teamTricks).reduce((a,b)=>a+Number(b),0);
+    // Save last trick for visibility
+    updates[`rooms/${roomCode}/lastTrickCards`]=trickCards;
+    updates[`rooms/${roomCode}/lastTrickWinner`]=winner;
 
     if(total>=13){
       const rr=computeRound(state,teamTricks);
@@ -1015,52 +1088,100 @@ window.playSelectedCard=async function(){
       const nextRound=(state.round||1)+1;
       if(nextRound>(state.maxRounds||13)){
         updates[`rooms/${roomCode}/phase`]="done";
-      } else {
+      }else{
         updates[`rooms/${roomCode}/round`]=nextRound;
         updates[`rooms/${roomCode}/hukum`]="S";
-        const rawReps2=state.turnOrder||[];
-        let reps2=Array.isArray(rawReps2)?rawReps2:Object.keys(rawReps2).sort().map(k=>rawReps2[k]);
+        let reps2=state.turnOrder||[];
         if(reps2.length<4){
           reps2=[];
           for(let ti=0;ti<4;ti++){
-            const tp=Object.keys(state.players||{}).filter(pid=>Number(state.players[pid].team)===ti);
+            const tp=Object.keys(state.players||{}).filter(p=>Number(state.players[p].team)===ti);
             reps2.push(tp[0]);
           }
         }
         const newH=dealCards(reps2);
-        Object.keys(state.players||{}).forEach(pid=>{
-          const rep=reps2[Number(state.players[pid].team)];
-          updates[`rooms/${roomCode}/hands/${pid}`]=newH[rep];
+        Object.keys(state.players||{}).forEach(p2=>{
+          const rep=reps2[Number(state.players[p2].team)];
+          updates[`rooms/${roomCode}/hands/${p2}`]=newH[rep];
         });
       }
-      updates[`rooms/${roomCode}/currentTrick`]={cards:{},leader:winner,turn:winner};
-    } else {
+    }else{
       updates[`rooms/${roomCode}/teamTricks`]=teamTricks;
-      updates[`rooms/${roomCode}/currentTrick`]={cards:{},leader:winner,turn:winner};
     }
-  } else {
-    updates[`rooms/${roomCode}/currentTrick/cards`]=trickCards;
+    updates[`rooms/${roomCode}/currentTrick`]={cards:{placeholder:null},leader:winner,turn:winner};
+  }else{
     updates[`rooms/${roomCode}/currentTrick/turn`]=nextPid;
   }
-
-  selectedCard=null;
   await update(ref(db,"/"),updates);
-};
+}
 
-function resolveTrick(cards,leader,trump,players){
-  const ledSuit=parseCard(cards[leader]).suit;
-  let winner=leader, winCard=parseCard(cards[leader]);
+// ── BOT LOGIC ──
+function scheduleBotTick(state){
+  if(!state)return;
+  const trick=state.currentTrick||{};
+  const currentTurnPid=trick.turn;
+  if(!currentTurnPid)return;
+  const p=state.players?.[currentTurnPid];
+  if(!p||!p.isBot)return;
+  // Only the host runs bot logic to avoid double-plays
+  if(!isHost)return;
+  if(botTickInterval)clearTimeout(botTickInterval);
+  botTickInterval=setTimeout(()=>runBotTurn(currentTurnPid,state),900);
+}
+
+async function runBotTurn(botPid,state){
+  const snap=await get(roomRef);
+  if(!snap.exists())return;
+  const freshState=snap.val();
+  freshState.turnOrder=normArr(freshState.turnOrder);
+  const trick=freshState.currentTrick||{};
+  if(trick.turn!==botPid)return; // someone else played already
+  const hand=normArr(freshState.hands?.[botPid]);
+  if(!hand.length)return;
+  // Simple bot: follow suit if possible, else play lowest non-trump, else lowest trump
+  const trickCardsNow=trick.cards||{};
+  const leaderCard=trick.leader&&trickCardsNow[trick.leader]?trickCardsNow[trick.leader]:null;
+  const ledSuit=leaderCard?parseCard(leaderCard).suit:null;
+  let card=null;
+  if(ledSuit){
+    // Must follow suit
+    const suited=hand.filter(c=>parseCard(c).suit===ledSuit);
+    if(suited.length){
+      // Play highest of led suit (try to win)
+      card=suited[suited.length-1];
+    }else{
+      // Void in led suit — can play trump or discard
+      const trumpCards=hand.filter(c=>parseCard(c).suit==="♠");
+      const nonTrump=hand.filter(c=>parseCard(c).suit!=="♠");
+      // Simple: play lowest trump to capture, else discard lowest
+      card=trumpCards.length?trumpCards[0]:nonTrump.length?nonTrump[0]:hand[0];
+    }
+  }else{
+    // Leading: play lowest non-trump to conserve trump
+    const nonTrump=hand.filter(c=>parseCard(c).suit!=="♠");
+    card=nonTrump.length?nonTrump[0]:hand[0];
+  }
+  if(!card)return;
+  await doPlayCard(botPid,card,freshState);
+}
+
+// ── TRICK RESOLUTION ──
+function resolveTrick(cards,leader,trump){
+  const leaderCardStr=cards[leader];
+  if(!leaderCardStr){console.error("no leader card",leader,cards);return leader;}
+  const ledSuit=parseCard(leaderCardStr).suit;
+  let winner=leader,winCard=parseCard(cards[leader]);
   Object.entries(cards).forEach(([pid,cid])=>{
-    if(pid===leader) return;
+    if(!cid||pid==="placeholder"||pid===leader)return;
     const c=parseCard(cid);
-    if(beats(c,winCard,ledSuit,trump)){ winner=pid; winCard=c; }
+    if(beats(c,winCard,ledSuit,trump)){winner=pid;winCard=c;}
   });
   return winner;
 }
 function beats(ch,cur,ledSuit,trump){
-  const ct=trump&&ch.suit===trump, wt=trump&&cur.suit===trump;
-  if(ct&&!wt) return true; if(!ct&&wt) return false;
-  if(ch.suit!==cur.suit) return false;
+  const ct=ch.suit===trump,wt=cur.suit===trump;
+  if(ct&&!wt)return true;if(!ct&&wt)return false;
+  if(ch.suit!==cur.suit)return false;
   return RANKS.indexOf(ch.rank)>RANKS.indexOf(cur.rank);
 }
 function computeRound(state,teamTricks){
@@ -1071,7 +1192,7 @@ function computeRound(state,teamTricks){
     const tp=Object.keys(players).filter(pid=>Number(players[pid].team)===ti);
     const dp=tp.find(pid=>decls[pid]);
     const made=Number(teamTricks[ti])||0;
-    if(!dp){ teamResults[ti]={declared:0,made,blind:false,score:0}; continue; }
+    if(!dp){teamResults[ti]={declared:0,made,blind:false,score:0};continue;}
     const declared=decls[dp].amount||0;
     const blind=decls[dp].blind||false;
     const score=calcScore(declared,made,blind);
@@ -1081,23 +1202,194 @@ function computeRound(state,teamTricks){
 }
 function calcScore(declared,made,blind){
   const base=declared*10;
-  if(blind) return made>=declared?declared*20:-base;
-  if(made<declared) return -base;
-  if(made===declared) return base;
-  if(made>=declared*2) return -(base+(made-declared));
+  if(blind)return made>=declared?declared*20:-base;
+  if(made<declared)return-base;
+  if(made===declared)return base;
+  if(made>=declared*2)return-(base+(made-declared));
   return base+(made-declared);
+}
+
+// ── REDEAL ──
+function handQualifiesRedeal(cards){
+  const hasSpade=cards.some(c=>parseCard(c).suit==="♠");
+  const hasFace=cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+  return!hasSpade||!hasFace;
+}
+function renderRedealBanner(state){
+  const banner=document.getElementById("redeal-banner");
+  const reasonEl=document.getElementById("redeal-reason");
+  if(!banner)return;
+  const claim=state.redealClaim;
+  if(claim){banner.style.display="none";return;}
+  const trickCards=state.currentTrick?.cards||{};
+  const totalTricks=Object.values(state.teamTricks||{}).reduce((a,b)=>a+Number(b),0);
+  const realCards=Object.entries(trickCards).filter(([k,v])=>k!=="placeholder"&&v);
+  if(totalTricks>0||realCards.length>0){banner.style.display="none";return;}
+  const myHand=state.hands?.[myId]||[];
+  const hasSpade=myHand.some(c=>parseCard(c).suit==="♠");
+  const hasFace=myHand.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+  if(!hasSpade&&!hasFace){reasonEl.textContent="🚫 No Spades AND no face cards!";banner.style.display="flex";}
+  else if(!hasSpade){reasonEl.textContent="🚫 No Spades (Hukum)!";banner.style.display="flex";}
+  else if(!hasFace){reasonEl.textContent="🚫 No face cards (J/Q/K/A)!";banner.style.display="flex";}
+  else{banner.style.display="none";}
+}
+function renderRedealModal(state){
+  const claim=state.redealClaim;
+  const modal=document.getElementById("redeal-modal");
+  if(!claim){modal.classList.remove("show");return;}
+  modal.classList.add("show");
+  const claimantName=state.players?.[claim.pid]?.name||"?";
+  const claimantTeam=Number(state.players?.[claim.pid]?.team??-1);
+  const teamName=state.teams?.[claimantTeam]?.name||"";
+  const cards=normArr(claim.hand);
+  const status=claim.status||"pending";
+  document.getElementById("redeal-modal-title").textContent=
+    status==="penalised"?"👻 Ghochi Penalty!":status==="rejected"?"❌ Rejected!":status==="approved"?"✅ Approved!":"🔀 Redeal Requested";
+  const hasSpade=cards.some(c=>parseCard(c).suit==="♠");
+  const hasFace=cards.some(c=>FACE_RANKS.includes(parseCard(c).rank));
+  let rt=!hasSpade&&!hasFace?"no Spades and no face cards":!hasSpade?"no Spades":!hasFace?"no face cards":"⚠️ FAKE — has both!";
+  document.getElementById("redeal-modal-desc").innerHTML=`<span class="pill pill-${claimantTeam}">${claimantName} (${teamName})</span><br>Claims: <strong>${rt}</strong>`;
+  const handCon=document.getElementById("redeal-shown-hand");handCon.innerHTML="";
+  cards.forEach(cid=>{
+    const el=makeCardEl(cid,{small:true});
+    el.style.cursor="default";
+    const c=parseCard(cid);
+    if(c.suit==="♠"||FACE_RANKS.includes(c.rank))el.style.outline="2.5px solid var(--red)";
+    handCon.appendChild(el);
+  });
+  const iAmClaimant=claim.pid===myId;
+  const votes=claim.votes||{};
+  const otherPids=Object.keys(state.players||{}).filter(p=>p!==claim.pid);
+  const approveCount=Object.values(votes).filter(v=>v==="approve").length;
+  const rejectCount=Object.values(votes).filter(v=>v==="reject").length;
+  const myVote=votes[myId];
+  document.getElementById("redeal-verdict-btns").style.display="none";
+  document.getElementById("redeal-penalty-section").style.display="none";
+  document.getElementById("redeal-waiting-msg").style.display="none";
+  document.getElementById("redeal-cancel-btn").style.display="none";
+  if(status==="pending"){
+    if(iAmClaimant){
+      document.getElementById("redeal-waiting-msg").style.display="block";
+      document.getElementById("redeal-waiting-msg").textContent=`Waiting… (${approveCount}✅ ${rejectCount}❌ / ${otherPids.length})`;
+      document.getElementById("redeal-cancel-btn").style.display="block";
+    }else if(!myVote){
+      document.getElementById("redeal-verdict-btns").style.display="flex";
+    }else{
+      document.getElementById("redeal-waiting-msg").style.display="block";
+      document.getElementById("redeal-waiting-msg").textContent=`You voted ${myVote}. Waiting… (${approveCount}✅ ${rejectCount}❌)`;
+    }
+  }else if(status==="rejected"){
+    if(isHost)document.getElementById("redeal-penalty-section").style.display="block";
+    else{document.getElementById("redeal-waiting-msg").style.display="block";document.getElementById("redeal-waiting-msg").textContent="Rejected! Host deciding…";}
+  }else if(status==="approved"){
+    document.getElementById("redeal-waiting-msg").style.display="block";
+    document.getElementById("redeal-waiting-msg").textContent="✅ Approved! Redealing…";
+  }else if(status==="penalised"){
+    document.getElementById("redeal-waiting-msg").style.display="block";
+    document.getElementById("redeal-waiting-msg").textContent=`👻 -50 Ghochi penalty applied!`;
+    setTimeout(()=>modal.classList.remove("show"),4000);
+  }
+}
+window.requestRedeal=async function(){
+  const state=gameState;if(!state)return;
+  const myHand=state.hands?.[myId]||[];
+  if(!handQualifiesRedeal(myHand)){toast("You don't qualify for a redeal!",true);return;}
+  const totalTricks=Object.values(state.teamTricks||{}).reduce((a,b)=>a+Number(b),0);
+  if(totalTricks>0){toast("Redeal only allowed before any trick is played!",true);return;}
+  await update(roomRef,{redealClaim:{pid:myId,hand:myHand,status:"pending",votes:{}}});
+  toast("Redeal requested — hand revealed to all!");
+};
+window.cancelRedealRequest=async function(){
+  if(gameState?.redealClaim?.pid!==myId)return;
+  await update(roomRef,{redealClaim:null});
+};
+window.voteRedeal=async function(vote){
+  const state=gameState;const claim=state?.redealClaim;
+  if(!claim||claim.pid===myId)return;
+  const otherPids=Object.keys(state.players||{}).filter(p=>p!==claim.pid);
+  const updates={};
+  updates[`rooms/${roomCode}/redealClaim/votes/${myId}`]=vote;
+  const newVotes={...(claim.votes||{}),[myId]:vote};
+  const approveCount=Object.values(newVotes).filter(v=>v==="approve").length;
+  const rejectCount=Object.values(newVotes).filter(v=>v==="reject").length;
+  if(rejectCount>0){
+    updates[`rooms/${roomCode}/redealClaim/status`]="rejected";
+  }else if(approveCount>=otherPids.length){
+    updates[`rooms/${roomCode}/redealClaim/status`]="approved";
+    const reps=normArr(state.turnOrder);
+    const newH=dealCards(reps);
+    Object.keys(state.players||{}).forEach(pid=>{
+      const rep=reps[Number(state.players[pid].team)];
+      updates[`rooms/${roomCode}/hands/${pid}`]=newH[rep];
+    });
+    updates[`rooms/${roomCode}/declarations`]={};
+    updates[`rooms/${roomCode}/teamTricks`]={"0":0,"1":0,"2":0,"3":0};
+    updates[`rooms/${roomCode}/currentTrick`]={cards:{placeholder:null},leader:state.currentTrick?.leader||reps[0],turn:state.currentTrick?.leader||reps[0]};
+    setTimeout(async()=>{await update(roomRef,{redealClaim:null});toast("Cards redealt! 🔀");},2500);
+  }
+  await update(ref(db,"/"),updates);
+};
+window.applyGhochiPenalty=async function(){
+  if(!isHost){toast("Only host!",true);return;}
+  const claim=gameState?.redealClaim;if(!claim)return;
+  const claimantTeam=Number(gameState.players?.[claim.pid]?.team??-1);if(claimantTeam<0)return;
+  const teams=(gameState.teams||[]).map((t,ti)=>ti===claimantTeam?{...t,score:(t.score||0)-50}:t);
+  await update(roomRef,{teams,"redealClaim/status":"penalised"});
+  setTimeout(async()=>await update(roomRef,{redealClaim:null}),4000);
+};
+window.dismissRedeal=async function(){
+  if(!isHost){toast("Only host!",true);return;}
+  await update(roomRef,{redealClaim:null});
+};
+
+// ── DECLARE ──
+function renderDeclareTab(state){
+  const decls=state.declarations||{};
+  const players=state.players||{};
+  const myTeam=myTeamIdx(state);
+  const myTeamPids=Object.keys(players).filter(pid=>Number(players[pid].team)===myTeam);
+  const myTeamDeclared=myTeamPids.some(pid=>decls[pid]);
+  document.getElementById("my-declare-section").style.display=(!myTeamDeclared)?"block":"none";
+}
+window.toggleBlind=function(){
+  blindOn=!blindOn;
+  document.getElementById("blind-track").classList.toggle("on",blindOn);
+  const inp=document.getElementById("declare-input");
+  if(blindOn){inp.min=5;if(parseInt(inp.value)<5)inp.value=5;}else inp.min=2;
+};
+window.submitDeclaration=async function(){
+  const amount=parseInt(document.getElementById("declare-input").value);
+  if(isNaN(amount)){toast("Enter a number!",true);return;}
+  if(blindOn&&amount<5){toast("Blind needs ≥5!",true);return;}
+  if(!blindOn&&amount<2){toast("Min is 2!",true);return;}
+  if(amount>13){toast("Max is 13!",true);return;}
+  await update(ref(db,`rooms/${roomCode}/declarations`),{[myId]:{amount,blind:blindOn}});
+  toast("Declared "+amount+(blindOn?" (Blind)":"")+"!");
+};
+function renderDeclTable(state){
+  const tbody=document.getElementById("declarations-tbody");tbody.innerHTML="";
+  const decls=state.declarations||{};const players=state.players||{};
+  (state.teams||[]).forEach((team,ti)=>{
+    const tp=Object.entries(players).filter(([,p])=>Number(p.team)===ti);
+    const declared=tp.find(([pid])=>decls[pid]);
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><span class="pill pill-${ti}">${team.name}</span></td>
+      <td>${declared?decls[declared[0]]?.amount:"—"}</td>
+      <td>${declared&&decls[declared[0]]?.blind?'<span class="pill blind-badge">🙈</span>':"—"}</td>
+      <td>${state.teamTricks?.[ti]??0}</td>`;
+    tbody.appendChild(tr);
+  });
 }
 
 // ── SCORES TAB ──
 function renderScoresTab(state){
-  const list=document.getElementById("scores-list");
-  list.innerHTML="";
+  const list=document.getElementById("scores-list");list.innerHTML="";
   const medals=["🥇","🥈","🥉","4️⃣"];
   const sorted=[...(state.teams||[])].map((t,i)=>({...t,idx:i})).sort((a,b)=>(b.score||0)-(a.score||0));
   sorted.forEach((team,rank)=>{
     const sc=team.score||0;
-    const pnames=Object.entries(state.players||{}).filter(([,p])=>Number(p.team)===team.idx).map(([,p])=>p.name);
-    const div=document.createElement("div"); div.className="score-team-row";
+    const pnames=Object.entries(state.players||{}).filter(([,p])=>Number(p.team)===team.idx).map(([,p])=>p.name+(p.isBot?" 🤖":""));
+    const div=document.createElement("div");div.className="score-team-row";
     div.innerHTML=`<div class="score-team-color" style="background:${TEAM_COLORS[team.idx]}"></div>
       <div class="score-team-info">
         <div class="score-team-name">${medals[rank]} ${team.name}</div>
@@ -1150,16 +1442,13 @@ function showWinner(state){
   document.getElementById("winner-team-players").textContent=pnames.join(", ");
   const sc=w.score||0;
   document.getElementById("winner-team-score").textContent=(sc>0?"+":"")+sc+" pts";
-  showScreen("winner");
-  startConfetti();
+  showScreen("winner");startConfetti();
 }
-
 window.showFinalScores=function(){
-  const state=gameState; if(!state) return;
-  const body=document.getElementById("full-scores-body");
+  const state=gameState;if(!state)return;
   const medals=["🥇","🥈","🥉","4️⃣"];
   const sorted=[...(state.teams||[])].map((t,i)=>({...t,idx:i})).sort((a,b)=>(b.score||0)-(a.score||0));
-  body.innerHTML=sorted.map((t,rank)=>{
+  document.getElementById("full-scores-body").innerHTML=sorted.map((t,rank)=>{
     const sc=t.score||0;
     const pnames=Object.entries(state.players||{}).filter(([,p])=>Number(p.team)===t.idx).map(([,p])=>p.name);
     return`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
@@ -1170,13 +1459,12 @@ window.showFinalScores=function(){
   }).join("");
   document.getElementById("full-scores-modal").classList.add("show");
 };
-
 window.newGame=function(){
   if(!isHost){toast("Only host can start new game!",true);return;}
   update(roomRef,{phase:"waiting",round:0,hukum:"S",hands:{},declarations:{},
-    currentTrick:null,roundHistory:[],roundResult:null,
+    currentTrick:null,roundHistory:[],roundResult:null,lastTrickCards:null,lastTrickWinner:null,
     teamTricks:{"0":0,"1":0,"2":0,"3":0},
-    teams:TEAM_NAMES.map(n=>({name:n,score:0}))
+    teams:DEFAULT_TEAM_NAMES.map(n=>({name:n,score:0}))
   });
 };
 
@@ -1186,12 +1474,12 @@ window.switchTab=function(tab){
     document.getElementById("tab-"+t).classList.toggle("active",t===tab);
     const el=document.getElementById("gtab-"+t);
     el.style.display=t===tab?(t==="play"?"flex":"block"):"none";
-    if(t==="play"&&t===tab) el.style.flexDirection="column";
+    if(t==="play"&&t===tab)el.style.flexDirection="column";
   });
 };
 window.sortHand=function(){
   handSorted=!handSorted;
-  const s=gameState; if(s) renderHand(s.hands?.[myId]||[],s);
+  const s=gameState;if(s)renderHand(s.hands?.[myId]||[],s);
   toast(handSorted?"Sorted by suit":"Original order");
 };
 
@@ -1199,32 +1487,43 @@ window.sortHand=function(){
 function startConfetti(){
   const canvas=document.getElementById("confetti-canvas");
   const ctx=canvas.getContext("2d");
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
   const colors=["#f5c518","#e84393","#2ecc71","#3498db","#e74c3c","#9b59b6"];
   const pieces=Array.from({length:130},()=>({
-    x:Math.random()*canvas.width, y:Math.random()*-canvas.height,
-    r:Math.random()*9+4, d:Math.random()*80+30,
+    x:Math.random()*canvas.width,y:Math.random()*-canvas.height,
+    r:Math.random()*9+4,d:Math.random()*80+30,
     color:colors[Math.floor(Math.random()*colors.length)],
-    tilt:0, tiltAngle:0, tiltInc:Math.random()*.07+.04
+    tilt:0,tiltAngle:0,tiltInc:Math.random()*.07+.04
   }));
   let frame;
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     pieces.forEach(p=>{
-      p.tiltAngle+=p.tiltInc; p.y+=(Math.cos(p.d)+1.6);
-      p.x+=Math.sin(p.d/30); p.tilt=Math.sin(p.tiltAngle)*14;
-      ctx.beginPath(); ctx.lineWidth=p.r/2; ctx.strokeStyle=p.color;
-      ctx.moveTo(p.x+p.tilt+p.r/4,p.y); ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/4); ctx.stroke();
+      p.tiltAngle+=p.tiltInc;p.y+=(Math.cos(p.d)+1.6);
+      p.x+=Math.sin(p.d/30);p.tilt=Math.sin(p.tiltAngle)*14;
+      ctx.beginPath();ctx.lineWidth=p.r/2;ctx.strokeStyle=p.color;
+      ctx.moveTo(p.x+p.tilt+p.r/4,p.y);ctx.lineTo(p.x+p.tilt,p.y+p.tilt+p.r/4);ctx.stroke();
       if(p.y>canvas.height+10){p.y=-10;p.x=Math.random()*canvas.width;}
     });
     frame=requestAnimationFrame(draw);
   }
-  draw(); setTimeout(()=>cancelAnimationFrame(frame),9000);
+  draw();setTimeout(()=>cancelAnimationFrame(frame),9000);
 }
+
+// ── SESSION KEEPALIVE — prevent auto-disconnect ──
+setInterval(()=>{
+  if(roomRef&&gameState?.phase==="playing"){
+    const pid=myId;
+    update(ref(db,`rooms/${roomCode}/presence/${pid}`),{t:Date.now(),name:myName}).catch(()=>{});
+  }
+},25000);
 
 // ── KEY BINDINGS ──
 document.getElementById("join-code-input").addEventListener("keydown",e=>{if(e.key==="Enter")window.joinRoom();});
 document.getElementById("player-name-input").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("join-code-input").focus();});
+
+// Init bot UI
+setBotMode("none");
 </script>
 </body>
 </html>
