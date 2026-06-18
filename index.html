@@ -168,6 +168,12 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .modal-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:440px;width:100%;box-shadow:var(--shadow);max-height:90vh;overflow-y:auto;}
 .modal-box h2{font-family:'Baloo 2',cursive;font-size:1.5rem;color:var(--gold);margin-bottom:16px;text-align:center;}
 
+/* ── SHUFFLE / CUT ANIMATIONS ── */
+@keyframes rifflLeft{0%{transform:rotate(0deg) translateX(0);}50%{transform:rotate(-25deg) translateX(-8px);}100%{transform:rotate(0deg) translateX(0);}}
+@keyframes rifflRight{0%{transform:rotate(0deg) translateX(0);}50%{transform:rotate(25deg) translateX(8px);}100%{transform:rotate(0deg) translateX(0);}}
+@keyframes cutTop{0%{transform:translateY(0);}40%{transform:translateY(-22px) translateX(18px);}70%{transform:translateY(43px) translateX(0);}100%{transform:translateY(43px);}}
+@keyframes cutBot{0%{transform:translateY(0);}40%{transform:translateY(22px) translateX(-18px);}70%{transform:translateY(-43px) translateX(0);}100%{transform:translateY(-43px);}}
+
 /* ── TRICK WIN OVERLAY ── */
 #trick-win-overlay{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.75);pointer-events:none;opacity:0;transition:opacity .3s;}
 #trick-win-overlay.show{opacity:1;}
@@ -215,6 +221,18 @@ input::placeholder{color:var(--muted);font-weight:600;}
 #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:800;}
 .reconnect-bar{background:rgba(231,76,60,.15);border-bottom:2px solid var(--red);padding:6px 16px;font-size:.78rem;font-weight:700;color:var(--red);text-align:center;display:none;}
 .reconnect-bar.show{display:block;}
+/* ── CHAT ── */
+.chat-msg{display:flex;flex-direction:column;gap:2px;max-width:88%;}
+.chat-msg.mine{align-self:flex-end;align-items:flex-end;}
+.chat-msg.theirs{align-self:flex-start;align-items:flex-start;}
+.chat-bubble{padding:5px 10px;border-radius:12px;font-size:.82rem;font-weight:600;line-height:1.4;word-break:break-word;}
+.chat-msg.mine .chat-bubble{background:var(--gold);color:#0d1117;border-bottom-right-radius:3px;}
+.chat-msg.theirs .chat-bubble{background:var(--card);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px;}
+.chat-sender{font-size:.62rem;font-weight:800;color:var(--muted);padding:0 4px;}
+.chat-panel-open #btn-chat{background:rgba(245,197,24,.2);border-color:var(--gold);color:var(--gold);}
+.chat-unread{position:relative;}
+.chat-unread::after{content:attr(data-count);position:absolute;top:-4px;right:-4px;background:var(--red);color:white;font-size:.55rem;font-weight:800;min-width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0 2px;}
+
 /* Cards played history strip */
 .cards-played-strip{padding:6px 16px;background:rgba(0,0,0,.2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow-x:auto;min-height:36px;}
 .cards-played-label{font-size:.62rem;color:var(--muted);font-weight:800;white-space:nowrap;}
@@ -330,9 +348,25 @@ input::placeholder{color:var(--muted);font-weight:600;}
       </div>
       <div class="hand-cards" id="my-hand-cards"></div>
     </div>
-    <div style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap;">
+    <div style="padding:10px 16px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <button class="btn btn-gold" id="btn-play-card" onclick="playSelectedCard()" disabled>▶ Play Card</button>
       <button class="btn btn-ghost btn-sm" onclick="sortHand()">Sort ♥♦♣♠</button>
+      <button class="btn btn-ghost btn-sm" id="btn-chat" onclick="toggleChat()">💬 Chat</button>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div id="chat-panel" style="display:none;flex-direction:column;height:200px;background:var(--surface);border-top:2px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <span style="font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">💬 Table Chat</span>
+        <button onclick="toggleChat()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:2px 6px;">✕</button>
+      </div>
+      <div id="chat-messages" style="flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px;scroll-behavior:smooth;"></div>
+      <div style="padding:7px 10px;display:flex;gap:7px;border-top:1px solid var(--border);flex-shrink:0;">
+        <input id="chat-input" type="text" placeholder="Say something…" maxlength="80" autocomplete="off"
+          style="flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:20px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;padding:6px 13px;outline:none;transition:border-color .2s;"
+          onkeydown="if(event.key==='Enter')sendChat()" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/>
+        <button class="btn btn-gold btn-sm" onclick="sendChat()" style="border-radius:20px;padding:6px 14px;">Send</button>
+      </div>
     </div>
   </div>
 
@@ -465,35 +499,125 @@ const RANKS=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 const ALL_SUITS=["♠","♥","♦","♣"];
 const RED_SUITS=["♥","♦"];
 const FACE_RANKS=["J","Q","K","A"];
-// Face card SVG art — classic playing card style
+// ── FACE CARD SVG ART ── Standard playing card figures (mirrored, bordered)
 function makeFaceSVG(rank,suit,isRed,small){
-  const col=isRed?"#cc1111":"#111122";
-  const s=suit;
-  const sz=small?44:64;
-  // Crown for King, tiara for Queen, feather for Jack
-  const crown=rank==="K"
-    ?`<path d="M${sz*.2},${sz*.65} L${sz*.2},${sz*.45} L${sz*.35},${sz*.55} L${sz*.5},${sz*.3} L${sz*.65},${sz*.55} L${sz*.8},${sz*.45} L${sz*.8},${sz*.65} Z" fill="${col}" opacity=".85"/>
-       <circle cx="${sz*.5}" cy="${sz*.28}" r="${sz*.05}" fill="${col}"/>
-       <circle cx="${sz*.2}" cy="${sz*.43}" r="${sz*.04}" fill="${col}"/>
-       <circle cx="${sz*.8}" cy="${sz*.43}" r="${sz*.04}" fill="${col}"/>`
-    :rank==="Q"
-    ?`<path d="M${sz*.3},${sz*.62} Q${sz*.5},${sz*.35} ${sz*.7},${sz*.62}" stroke="${col}" stroke-width="2.5" fill="none"/>
-       <circle cx="${sz*.5}" cy="${sz*.32}" r="${sz*.09}" fill="${col}" opacity=".8"/>
-       <path d="M${sz*.38},${sz*.32} L${sz*.5},${sz*.22} L${sz*.62},${sz*.32}" fill="${col}"/>`
-    :`<path d="M${sz*.5},${sz*.25} L${sz*.5},${sz*.68}" stroke="${col}" stroke-width="2.5"/>
-       <path d="M${sz*.35},${sz*.35} L${sz*.5},${sz*.25} L${sz*.65},${sz*.35}" stroke="${col}" stroke-width="2" fill="none"/>
-       <path d="M${sz*.35},${sz*.62} L${sz*.65},${sz*.62}" stroke="${col}" stroke-width="2"/>`;
-  // Body silhouette
-  const body=`<ellipse cx="${sz*.5}" cy="${sz*.78}" rx="${sz*.22}" ry="${sz*.14}" fill="${col}" opacity=".6"/>
-    <rect x="${sz*.35}" y="${sz*.64}" width="${sz*.3}" height="${sz*.18}" rx="3" fill="${col}" opacity=".7"/>`;
-  // Face circle
-  const face=`<circle cx="${sz*.5}" cy="${sz*.5}" r="${sz*.13}" fill="${col}" opacity=".15" stroke="${col}" stroke-width="1.5"/>`;
-  // Suit corner decorations
-  const suits=`<text x="${sz*.18}" y="${sz*.28}" font-size="${sz*.18}px" text-anchor="middle" fill="${col}" opacity=".5">${s}</text>
-    <text x="${sz*.82}" y="${sz*.82}" font-size="${sz*.18}px" text-anchor="middle" fill="${col}" opacity=".5" transform="rotate(180,${sz*.82},${sz*.74})">${s}</text>`;
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
-    ${suits}${face}${body}${crown}
-  </svg>`;
+  const W=small?40:62, H=small?56:88;
+  const suitCol=isRed?"#cc0000":"#111133";
+  const robeCol=isRed?"#cc2222":"#1a1a6e";
+  const robeHL=isRed?"#ee5555":"#3333aa";
+  const goldCol="#c8980a";
+  const skinCol="#f5ddb0";
+  const hairCol=isRed?"#4a2800":"#222222";
+  const W2=W/2, H2=H/2;
+  const px=(n)=>+(W*n).toFixed(2);
+  const py=(n)=>+(H*n).toFixed(2);
+
+  const border=
+    '<rect x="'+px(.06)+'" y="'+py(.03)+'" width="'+px(.88)+'" height="'+py(.94)+'" rx="'+px(.04)+'" fill="none" stroke="'+suitCol+'" stroke-width="'+px(.022)+'" opacity=".35"/>'+
+    '<rect x="'+px(.09)+'" y="'+py(.045)+'" width="'+px(.82)+'" height="'+py(.91)+'" rx="'+px(.03)+'" fill="none" stroke="'+suitCol+'" stroke-width="'+px(.01)+'" opacity=".2"/>';
+
+  const centPip='<text x="'+W2+'" y="'+H2+'" font-size="'+(small?7:10)+'px" text-anchor="middle" dominant-baseline="middle" fill="'+suitCol+'" opacity=".15" font-family="serif">'+suit+'</text>';
+
+  function faceEl(cx,cy){
+    const fw=px(.16),fh=py(.14);
+    const ey=cy-fh*.1, ex=fw*.38, my=cy+fh*.28, ny=cy+fh*.1;
+    const browOff=fh*.045;
+    return (
+      '<ellipse cx="'+(cx-px(.04))+'" cy="'+cy+'" rx="'+px(.04)+'" ry="'+py(.05)+'" fill="'+skinCol+'"/>'+
+      '<ellipse cx="'+(cx+px(.04))+'" cy="'+cy+'" rx="'+px(.04)+'" ry="'+py(.05)+'" fill="'+skinCol+'"/>'+
+      '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+fw+'" ry="'+fh+'" fill="'+skinCol+'"/>'+
+      '<ellipse cx="'+cx+'" cy="'+(cy-fh*.38)+'" rx="'+(fw*.95)+'" ry="'+py(.04)+'" fill="'+hairCol+'"/>'+
+      '<ellipse cx="'+(cx-ex)+'" cy="'+ey+'" rx="'+px(.028)+'" ry="'+py(.018)+'" fill="#222"/>'+
+      '<ellipse cx="'+(cx+ex)+'" cy="'+ey+'" rx="'+px(.028)+'" ry="'+py(.018)+'" fill="#222"/>'+
+      '<line x1="'+(cx-ex-px(.04))+'" y1="'+(ey-browOff)+'" x2="'+(cx-ex+px(.04))+'" y2="'+(ey-browOff*.4)+'" stroke="'+hairCol+'" stroke-width="'+px(.016)+'" stroke-linecap="round"/>'+
+      '<line x1="'+(cx+ex-px(.04))+'" y1="'+(ey-browOff*.4)+'" x2="'+(cx+ex+px(.04))+'" y2="'+(ey-browOff)+'" stroke="'+hairCol+'" stroke-width="'+px(.016)+'" stroke-linecap="round"/>'+
+      '<path d="M'+(cx-px(.015))+','+(ny-py(.02))+'Q'+cx+','+(ny+py(.03))+' '+(cx+px(.015))+','+(ny-py(.02))+'" stroke="'+hairCol+'" stroke-width="'+px(.012)+'" fill="none" opacity=".6"/>'+
+      '<path d="M'+(cx-px(.07))+','+my+'Q'+cx+','+(my+py(.02))+' '+(cx+px(.07))+','+my+'" stroke="'+hairCol+'" stroke-width="'+px(.016)+'" fill="none"/>'
+    );
+  }
+
+  function robeEl(topY,botY){
+    return (
+      '<path d="M'+px(.1)+','+topY+'L'+px(.9)+','+topY+'L'+px(.95)+','+botY+'L'+px(.05)+','+botY+'Z" fill="'+robeCol+'" stroke="'+suitCol+'" stroke-width=".4"/>'+
+      '<rect x="'+(W2-px(.06))+'" y="'+topY+'" width="'+px(.12)+'" height="'+(botY-topY)+'" fill="'+robeHL+'" opacity=".3"/>'+
+      '<path d="M'+px(.28)+','+topY+'L'+W2+','+(topY+py(.05))+'L'+px(.72)+','+topY+'" fill="white" opacity=".8" stroke="'+suitCol+'" stroke-width=".4"/>'
+    );
+  }
+
+  function kingSVG(){
+    const crownY=py(.06), crownH=py(.1);
+    const faceCY=crownY+crownH+py(.1);
+    const robeTop=faceCY+py(.12), robeBot=H2-py(.01);
+    const crown=
+      '<path d="M'+px(.15)+','+(crownY+crownH)+'L'+px(.15)+','+(crownY+crownH*.4)+'L'+px(.3)+','+(crownY+crownH*.65)+'L'+W2+','+crownY+'L'+px(.7)+','+(crownY+crownH*.65)+'L'+px(.85)+','+(crownY+crownH*.4)+'L'+px(.85)+','+(crownY+crownH)+'Z" fill="'+goldCol+'" stroke="#8a6800" stroke-width=".6"/>'+
+      '<rect x="'+px(.13)+'" y="'+(crownY+crownH-py(.02))+'" width="'+px(.74)+'" height="'+py(.02)+'" fill="'+goldCol+'"/>'+
+      '<circle cx="'+W2+'" cy="'+(crownY+py(.01))+'" r="'+px(.045)+'" fill="#e74c3c" stroke="#900" stroke-width=".5"/>'+
+      '<circle cx="'+px(.18)+'" cy="'+(crownY+crownH*.45)+'" r="'+px(.032)+'" fill="#3498db"/>'+
+      '<circle cx="'+px(.82)+'" cy="'+(crownY+crownH*.45)+'" r="'+px(.032)+'" fill="#2ecc71"/>';
+    const beard=
+      '<path d="M'+px(.3)+','+(faceCY+py(.1))+'Q'+W2+','+(faceCY+py(.2))+' '+px(.7)+','+(faceCY+py(.1))+'" stroke="'+hairCol+'" stroke-width="'+px(.025)+'" fill="none" stroke-linecap="round"/>'+
+      '<path d="M'+px(.33)+','+(faceCY+py(.07))+'Q'+W2+','+(faceCY+py(.14))+' '+px(.67)+','+(faceCY+py(.07))+'" stroke="'+hairCol+'" stroke-width="'+px(.014)+'" fill="none" opacity=".5"/>';
+    const sceptre=
+      '<line x1="'+px(.78)+'" y1="'+(robeTop+py(.02))+'" x2="'+px(.76)+'" y2="'+(robeBot-py(.02))+'" stroke="'+goldCol+'" stroke-width="'+px(.025)+'"/>'+
+      '<circle cx="'+px(.78)+'" cy="'+robeTop+'" r="'+px(.04)+'" fill="'+goldCol+'" stroke="#8a6800" stroke-width=".5"/>';
+    return crown+robeEl(robeTop,robeBot)+faceEl(W2,faceCY)+beard+sceptre;
+  }
+
+  function queenSVG(){
+    const tiaraY=py(.07), tiaraH=py(.07);
+    const faceCY=tiaraY+tiaraH+py(.1);
+    const robeTop=faceCY+py(.12), robeBot=H2-py(.01);
+    const tiara=
+      '<path d="M'+px(.18)+','+(tiaraY+tiaraH)+'Q'+W2+','+tiaraY+' '+px(.82)+','+(tiaraY+tiaraH)+'" stroke="'+goldCol+'" stroke-width="'+px(.028)+'" fill="none"/>'+
+      '<circle cx="'+W2+'" cy="'+(tiaraY+py(.01))+'" r="'+px(.042)+'" fill="#e74c3c" stroke="#900" stroke-width=".5"/>'+
+      '<circle cx="'+px(.3)+'" cy="'+(tiaraY+tiaraH*.5)+'" r="'+px(.026)+'" fill="'+goldCol+'"/>'+
+      '<circle cx="'+px(.7)+'" cy="'+(tiaraY+tiaraH*.5)+'" r="'+px(.026)+'" fill="'+goldCol+'"/>';
+    const hair=
+      '<path d="M'+px(.33)+','+(tiaraY+tiaraH)+'Q'+px(.18)+','+faceCY+' '+px(.2)+','+robeTop+'" stroke="'+hairCol+'" stroke-width="'+px(.044)+'" fill="none" stroke-linecap="round"/>'+
+      '<path d="M'+px(.67)+','+(tiaraY+tiaraH)+'Q'+px(.82)+','+faceCY+' '+px(.8)+','+robeTop+'" stroke="'+hairCol+'" stroke-width="'+px(.044)+'" fill="none" stroke-linecap="round"/>';
+    const orb=
+      '<line x1="'+px(.22)+'" y1="'+(robeTop+py(.04))+'" x2="'+px(.22)+'" y2="'+(robeTop+py(.11))+'" stroke="'+skinCol+'" stroke-width="'+px(.03)+'"/>'+
+      '<circle cx="'+px(.22)+'" cy="'+(robeTop+py(.17))+'" r="'+px(.065)+'" fill="'+goldCol+'" stroke="#8a6800" stroke-width=".6"/>'+
+      '<circle cx="'+px(.22)+'" cy="'+(robeTop+py(.17))+'" r="'+px(.03)+'" fill="'+suitCol+'" opacity=".4"/>';
+    return tiara+hair+robeEl(robeTop,robeBot)+faceEl(W2,faceCY)+orb;
+  }
+
+  function jackSVG(){
+    const hatBrimY=py(.07), hatH=py(.1);
+    const faceCY=hatBrimY+hatH+py(.1);
+    const robeTop=faceCY+py(.12), robeBot=H2-py(.01);
+    const hat=
+      '<ellipse cx="'+W2+'" cy="'+(hatBrimY+hatH)+'" rx="'+px(.38)+'" ry="'+py(.04)+'" fill="'+robeCol+'" stroke="'+suitCol+'" stroke-width=".5"/>'+
+      '<path d="M'+px(.28)+','+(hatBrimY+hatH)+'Q'+px(.26)+','+hatBrimY+' '+W2+','+(hatBrimY-py(.02))+'Q'+px(.74)+','+hatBrimY+' '+px(.72)+','+(hatBrimY+hatH)+'" fill="'+robeCol+'" stroke="'+suitCol+'" stroke-width=".5"/>'+
+      '<rect x="'+px(.27)+'" y="'+(hatBrimY+hatH-py(.018))+'" width="'+px(.46)+'" height="'+py(.018)+'" fill="'+goldCol+'"/>'+
+      '<path d="M'+px(.68)+','+(hatBrimY+hatH*.7)+'Q'+px(.85)+','+(hatBrimY-py(.05))+' '+px(.92)+','+(hatBrimY-py(.03))+'" stroke="'+robeHL+'" stroke-width="'+px(.024)+'" fill="none" stroke-linecap="round"/>'+
+      '<path d="M'+px(.7)+','+(hatBrimY+hatH*.6)+'Q'+px(.88)+','+(hatBrimY-py(.03))+' '+px(.92)+','+(hatBrimY-py(.03))+'" stroke="'+goldCol+'" stroke-width="'+px(.013)+'" fill="none" stroke-linecap="round"/>';
+    const ruff=
+      '<path d="M'+px(.28)+','+robeTop+'L'+px(.38)+','+(robeTop+py(.04))+'L'+W2+','+(robeTop+py(.06))+'L'+px(.62)+','+(robeTop+py(.04))+'L'+px(.72)+','+robeTop+'" fill="white" stroke="'+suitCol+'" stroke-width=".4" opacity=".9"/>';
+    const sword=
+      '<line x1="'+px(.7)+'" y1="'+(robeTop+py(.03))+'" x2="'+px(.72)+'" y2="'+(robeBot-py(.02))+'" stroke="#aaa" stroke-width="'+px(.022)+'"/>'+
+      '<rect x="'+px(.63)+'" y="'+(robeTop+py(.03))+'" width="'+px(.18)+'" height="'+py(.018)+'" rx="'+px(.01)+'" fill="'+goldCol+'"/>'+
+      '<rect x="'+px(.68)+'" y="'+(robeTop+py(.008))+'" width="'+px(.05)+'" height="'+py(.034)+'" rx="'+px(.01)+'" fill="'+goldCol+'"/>';
+    return hat+robeEl(robeTop,robeBot)+faceEl(W2,faceCY)+ruff+sword;
+  }
+
+  let topFig="";
+  if(rank==="K") topFig=kingSVG();
+  else if(rank==="Q") topFig=queenSVG();
+  else topFig=jackSVG();
+
+  const uid2=rank+suit+(small?"s":"l");
+  const botFig='<g transform="rotate(180,'+W2+','+H2+')">'+topFig+'</g>';
+  const divLine='<line x1="'+px(.08)+'" y1="'+H2+'" x2="'+px(.92)+'" y2="'+H2+'" stroke="'+suitCol+'" stroke-width="'+px(.01)+'" opacity=".3"/>';
+
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:hidden;">'+
+    border+
+    '<clipPath id="tc'+uid2+'"><rect x="0" y="0" width="'+W+'" height="'+H2+'"/></clipPath>'+
+    '<g clip-path="url(#tc'+uid2+')">'+topFig+'</g>'+
+    '<clipPath id="bc'+uid2+'"><rect x="0" y="'+H2+'" width="'+W+'" height="'+H2+'"/></clipPath>'+
+    '<g clip-path="url(#bc'+uid2+')">'+botFig+'</g>'+
+    divLine+centPip+
+  '</svg>';
 }
 // PIP_ROWS defined inside makeCardEl
 
@@ -525,6 +649,48 @@ function normArr(v,fallback=[]){
   if(!v)return fallback;
   if(Array.isArray(v))return v;
   return Object.keys(v).sort((a,b)=>Number(a)-Number(b)).map(k=>v[k]);
+}
+
+// ── AUDIO ──
+let _audioCtx=null;
+function getAudioCtx(){
+  if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(_audioCtx.state==="suspended")_audioCtx.resume();
+  return _audioCtx;
+}
+function playCardSound(type){
+  try{
+    const ctx=getAudioCtx();
+    const dur=type==="shuffle"?0.18:type==="win"?0.25:type==="cut"?0.1:0.07;
+    const buf=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*dur),ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++){
+      const t=i/ctx.sampleRate;
+      if(type==="deal"){
+        const riffle2=(Math.sin(t*80*Math.PI)*0.5+0.5);
+        d[i]=(Math.random()*2-1)*Math.exp(-t*100)*(0.6+0.4*Math.sin(t*1800));
+      }else if(type==="shuffle"){
+        const riffle=(Math.sin(t*80*Math.PI)*0.5+0.5);
+        d[i]=(Math.random()*2-1)*0.85*Math.exp(-t*18)*riffle;
+      }else if(type==="cut"){
+        d[i]=Math.sin(t*180*2*Math.PI)*Math.exp(-t*55)*0.5+(Math.random()*2-1)*0.25*Math.exp(-t*38);
+      }else if(type==="play"){
+        d[i]=(Math.random()*2-1)*0.25*Math.exp(-t*110)+Math.sin(t*280)*0.35*Math.exp(-t*80);
+      }else if(type==="win"){
+        const f=440+t*600;
+        d[i]=Math.sin(2*Math.PI*f*t)*Math.exp(-t*12)*0.45
+            +Math.sin(2*Math.PI*f*1.5*t)*Math.exp(-t*18)*0.2;
+      }else if(type==="chat"){
+        d[i]=Math.sin(2*Math.PI*880*t)*Math.exp(-t*30)*0.3;
+      }
+    }
+    const src=ctx.createBufferSource();
+    src.buffer=buf;
+    const gain=ctx.createGain();
+    gain.gain.value=type==="shuffle"?0.4:type==="win"?0.5:0.45;
+    src.connect(gain);gain.connect(ctx.destination);
+    src.start();
+  }catch(e){}
 }
 
 // ── DECK ──
@@ -655,36 +821,85 @@ window.startSoloGame=async function(){
   setTimeout(()=>window.hostStartGame(),800);
 };
 
-// ── DEAL ANIMATION ──
+// ── DEAL ANIMATION (shuffle + cut + deal) ──
 function showDealAnimation(cb){
   const overlay=document.getElementById("deal-overlay");
   overlay.classList.add("show");
-  document.getElementById("deal-sub-text").textContent="Shuffling the deck…";
-  let count=0;
+  const subtxt=document.getElementById("deal-sub-text");
   const deck=document.getElementById("deal-deck");
-  // Directions for 4 seats
-  const dirs=[
-    "translate(-50px,-120px) rotate(-20deg)",
-    "translate(160px,-20px) rotate(15deg)",
-    "translate(-50px,120px) rotate(10deg)",
-    "translate(-160px,-20px) rotate(-15deg)"
-  ];
-  function flyCard(i){
-    if(i>=13*4){
-      setTimeout(()=>{overlay.classList.remove("show");if(cb)cb();},400);
-      return;
+  deck.innerHTML="";
+
+  // Phase 1: SHUFFLE — two halves of deck riffle together
+  function doShuffle(times,onDone){
+    subtxt.textContent="Shuffling…";
+    let t=0;
+    function nextRiffle(){
+      if(t>=times){onDone();return;}
+      // Show riffle animation: two card stacks, then interleave
+      const left=document.createElement("div");
+      left.className="deal-card-anim";
+      left.style.cssText="position:absolute;width:29px;height:86px;left:-16px;top:0;transform-origin:right center;animation:rifflLeft .28s ease forwards;background:linear-gradient(135deg,#1a237e,#283593);border-radius:6px;border:2px solid rgba(255,255,255,.15);";
+      const right=document.createElement("div");
+      right.className="deal-card-anim";
+      right.style.cssText="position:absolute;width:29px;height:86px;left:16px;top:0;transform-origin:left center;animation:rifflRight .28s ease forwards;background:linear-gradient(135deg,#283593,#1a237e);border-radius:6px;border:2px solid rgba(255,255,255,.15);";
+      deck.appendChild(left);deck.appendChild(right);
+      playCardSound("shuffle");
+      setTimeout(()=>{left.remove();right.remove();t++;nextRiffle();},300);
     }
-    const el=document.createElement("div");
-    el.className="deal-card-anim deal-card-flying";
-    el.style.setProperty("--deal-to",dirs[i%4]);
-    el.style.animationDuration="0.38s";
-    deck.appendChild(el);
-    setTimeout(()=>{el.remove();flyCard(i+1);},90);
+    nextRiffle();
   }
-  setTimeout(()=>{
-    document.getElementById("deal-sub-text").textContent="Dealing cards…";
+
+  // Phase 2: CUT — split deck, swap halves
+  function doCut(onDone){
+    subtxt.textContent="Cutting the deck…";
+    const top=document.createElement("div");
+    top.className="deal-card-anim";
+    top.style.cssText="position:absolute;width:58px;height:43px;top:0;left:0;background:linear-gradient(135deg,#1a237e,#283593);border-radius:6px;border:2px solid rgba(255,255,255,.15);animation:cutTop .4s ease forwards;";
+    const bot=document.createElement("div");
+    bot.className="deal-card-anim";
+    bot.style.cssText="position:absolute;width:58px;height:43px;top:43px;left:0;background:linear-gradient(135deg,#283593,#1a237e);border-radius:6px;border:2px solid rgba(255,255,255,.15);animation:cutBot .4s ease forwards;";
+    deck.appendChild(top);deck.appendChild(bot);
+    playCardSound("cut");
+    setTimeout(()=>{top.remove();bot.remove();onDone();},500);
+  }
+
+  // Phase 3: DEAL cards to 4 players
+  function doDeal(onDone){
+    subtxt.textContent="Dealing cards…";
+    const dirs=[
+      "translate(-50px,-130px) rotate(-18deg)",
+      "translate(170px,-20px) rotate(14deg)",
+      "translate(-50px,130px) rotate(10deg)",
+      "translate(-170px,-20px) rotate(-14deg)"
+    ];
+    // Restore single deck card
+    deck.innerHTML="<div class='deal-card-anim'></div>";
+    function flyCard(i){
+      if(i>=13*4){
+        setTimeout(()=>{deck.innerHTML="";overlay.classList.remove("show");if(onDone)onDone();},400);
+        return;
+      }
+      const el=document.createElement("div");
+      el.className="deal-card-anim deal-card-flying";
+      el.style.setProperty("--deal-to",dirs[i%4]);
+      el.style.animationDuration="0.35s";
+      deck.appendChild(el);
+      if(i%4===0) playCardSound("deal");
+      setTimeout(()=>{el.remove();flyCard(i+1);},85);
+    }
     flyCard(0);
-  },500);
+  }
+
+  // Run phases in sequence
+  setTimeout(()=>{
+    doShuffle(4,()=>{
+      setTimeout(()=>{
+        doCut(()=>{
+          setTimeout(()=>doDeal(cb),200);
+        });
+      },200);
+    });
+  },300);
 }
 
 // ── LISTEN ROOM ──
@@ -708,7 +923,13 @@ function listenRoom(){
     }else if(state.phase==="playing"){
       if(prevPhase!=="playing"&&!dealShown){
         dealShown=true;
-        showDealAnimation(()=>{showScreen("game");renderGame(state);});
+        showDealAnimation(()=>{
+          showScreen("game");
+          renderGame(state);
+          // Auto-switch to Declare tab so players declare immediately
+          switchTab("declare");
+          toast("📋 Declare your Sar/Hath before playing!");
+        });
       }else{
         showScreen("game");
         // Trick win overlay: fire for ALL players when winner changes
@@ -740,6 +961,8 @@ function listenRoom(){
       }
       // Bot tick
       scheduleBotTick(state);
+      // Start chat listener
+      listenChat();
     }else if(state.phase==="done"){
       showWinner(state);
     }
@@ -913,6 +1136,18 @@ function renderGame(state){
 function myTeamIdx(state){return Number(state?.players?.[myId]?.team??-1);}
 function getHukumSuit(){return"♠";}
 
+// All 4 teams must have declared before play can begin
+function allTeamsDeclared(state){
+  const decls=state.declarations||{};
+  const players=state.players||{};
+  for(let ti=0;ti<4;ti++){
+    const tp=Object.keys(players).filter(pid=>Number(players[pid].team)===ti);
+    const hasDecl=tp.some(pid=>decls[pid]);
+    if(!hasDecl) return false;
+  }
+  return true;
+}
+
 // ── TABLE AREA (round table with seats) ──
 function renderTableArea(state){
   const table=document.getElementById("round-table");
@@ -995,18 +1230,38 @@ function renderHand(cards,state){
   const ledSuit=leaderCard?parseCard(leaderCard).suit:null;
   const isMyTurn=trick.turn===myId&&!blockPlay;
   let display=handSorted?sortCards(cards,trump):cards;
+  // Find current highest-ranked card played in this trick (for led suit)
+  let highestPlayedRank=-1;
+  if(ledSuit){
+    Object.values(trickCards).forEach(tc=>{
+      if(!tc||tc==="placeholder")return;
+      const tc_=parseCard(tc);
+      if(tc_.suit===ledSuit){
+        const ri=RANKS.indexOf(tc_.rank);
+        if(ri>highestPlayedRank)highestPlayedRank=ri;
+      }
+    });
+  }
+  const hasLedSuit=ledSuit?cards.some(id=>parseCard(id).suit===ledSuit):false;
+  // Do I have a HIGHER card of led suit than the current best?
+  const hasHigherLed=ledSuit?cards.some(id=>{
+    const p=parseCard(id);
+    return p.suit===ledSuit && RANKS.indexOf(p.rank)>highestPlayedRank;
+  }):false;
+
   display.forEach(cid=>{
     const c=parseCard(cid);
     let disabled=!isMyTurn;
     if(!disabled&&ledSuit){
-      const hasLed=cards.some(id=>parseCard(id).suit===ledSuit);
-      // ── TRUMP RULE: if player has led-suit, they CANNOT play trump (unless led-suit IS trump) ──
-      if(hasLed){
-        if(c.suit!==ledSuit)disabled=true; // must follow suit
-      }else{
-        // No led suit card: can play anything EXCEPT — actually in Ghochi you CAN play trump freely when void
-        // (no restriction when void of led suit)
+      if(hasLedSuit){
+        // Rule 3: Cannot play trump if holding led-suit card (unless led suit IS trump)
+        if(c.suit==="♠"&&ledSuit!=="♠"){disabled=true;}
+        // Must follow suit
+        else if(c.suit!==ledSuit){disabled=true;}
+        // Rule 2: If I have a higher card, I cannot play a lower card of same suit
+        else if(hasHigherLed && RANKS.indexOf(c.rank)<=highestPlayedRank){disabled=true;}
       }
+      // If void of led suit: can play anything (trump or any other suit)
     }
     const isSelected=selectedCard===cid;
     const el=makeCardEl(cid,{disabled,selected:isSelected});
@@ -1022,13 +1277,27 @@ function renderHand(cards,state){
     }
     con.appendChild(el);
   });
-  document.getElementById("btn-play-card").disabled=!isMyTurn;
+  document.getElementById("btn-play-card").disabled=!isMyTurn||!allTeamsDeclared(state);
 }
 
 // ── TURN BANNER ──
 function renderTurnBanner(state){
   const el=document.getElementById("turn-banner");
   const trick=state.currentTrick||{};
+  // Gate: all teams must declare first
+  if(!allTeamsDeclared(state)){
+    const decls=state.declarations||{};
+    const players=state.players||{};
+    const pending=[];
+    for(let ti=0;ti<4;ti++){
+      const tp=Object.keys(players).filter(pid=>Number(players[pid].team)===ti);
+      if(!tp.some(pid=>decls[pid])) pending.push(state.teams?.[ti]?.name||"Team "+(ti+1));
+    }
+    el.className="waiting-banner";
+    el.innerHTML="📋 Waiting for declarations: <strong>"+pending.join(", ")+"</strong>";
+    document.getElementById("btn-play-card").disabled=true;
+    return;
+  }
   if(trick.turn===myId&&!blockPlay){
     el.className="turn-banner";el.textContent="🃏 Your turn! Select a card and tap Play.";
   }else{
@@ -1057,6 +1326,7 @@ function showTrickWinOverlay(winnerPid,trickCards,state,cb){
     cardsCon.appendChild(el);
   });
   overlay.classList.add("show");
+  playCardSound("win");
   if(trickWinTimeout)clearTimeout(trickWinTimeout);
   trickWinTimeout=setTimeout(()=>{
     overlay.classList.remove("show");
@@ -1070,8 +1340,10 @@ window.playSelectedCard=async function(){
   if(!selectedCard){toast("Select a card first!",true);return;}
   if(blockPlay){toast("Wait…",true);return;}
   const state=gameState;
+  if(!allTeamsDeclared(state)){toast("All teams must declare first!",true);return;}
   const trick=state.currentTrick||{};
   if(trick.turn!==myId){toast("Not your turn!",true);return;}
+  playCardSound("play");
   await doPlayCard(myId,selectedCard,state);
   selectedCard=null;
 };
@@ -1090,16 +1362,39 @@ async function doPlayCard(pid,cardToPlay,state){
   const leaderCard=trick.leader&&trickCardsNow[trick.leader]?trickCardsNow[trick.leader]:null;
   const ledSuit=leaderCard?parseCard(leaderCard).suit:null;
   if(ledSuit&&pid===myId){
-    // origHand is the full hand including the card being played
     const origHasLed=origHand.some(id=>parseCard(id).suit===ledSuit);
-    if(origHasLed&&parseCard(cardToPlay).suit!==ledSuit){
+    const playedC=parseCard(cardToPlay);
+
+    // Rule 3: Cannot play trump if holding led-suit card
+    if(origHasLed&&playedC.suit==="♠"&&ledSuit!=="♠"){
+      toast("Cannot play Hukum (♠) — you have "+ledSuit+" cards!",true);
+      return;
+    }
+    // Must follow led suit if holding it
+    if(origHasLed&&playedC.suit!==ledSuit){
       toast("Must follow suit! You have "+ledSuit+" cards.",true);
       return;
     }
-    // Trump restriction: cannot play Spades if player holds the led suit (and led suit ≠ spades)
-    if(origHasLed&&parseCard(cardToPlay).suit==="♠"&&ledSuit!=="♠"){
-      toast("Cannot play Hukum (♠) — you have "+ledSuit+" cards!",true);
-      return;
+    // Rule 2: Must play higher card if available
+    if(origHasLed&&playedC.suit===ledSuit){
+      // Find highest played so far in this trick for led suit
+      let highestIdx=-1;
+      Object.values(trickCardsNow).forEach(tc=>{
+        if(!tc||tc==="placeholder")return;
+        const tp=parseCard(tc);
+        if(tp.suit===ledSuit){
+          const ri=RANKS.indexOf(tp.rank);
+          if(ri>highestIdx)highestIdx=ri;
+        }
+      });
+      const hasHigher=origHand.some(id=>{
+        const p=parseCard(id);
+        return p.suit===ledSuit&&RANKS.indexOf(p.rank)>highestIdx;
+      });
+      if(hasHigher&&RANKS.indexOf(playedC.rank)<=highestIdx){
+        toast("You must play a higher "+ledSuit+" card!",true);
+        return;
+      }
     }
   }
 
@@ -1202,20 +1497,33 @@ async function runBotTurn(botPid,state){
   const ledSuit=leaderCard?parseCard(leaderCard).suit:null;
   let card=null;
   if(ledSuit){
-    // Must follow suit
     const suited=hand.filter(c=>parseCard(c).suit===ledSuit);
     if(suited.length){
-      // Play highest of led suit (try to win)
-      card=suited[suited.length-1];
+      // Rule 2: Find highest card played in trick for led suit
+      let highestIdx=-1;
+      Object.values(trickCardsNow).forEach(tc=>{
+        if(!tc||tc==="placeholder")return;
+        const tp=parseCard(tc);
+        if(tp.suit===ledSuit){const ri=RANKS.indexOf(tp.rank);if(ri>highestIdx)highestIdx=ri;}
+      });
+      // Must play higher if possible (Rule 2)
+      const higher=suited.filter(c=>RANKS.indexOf(parseCard(c).rank)>highestIdx);
+      if(higher.length){
+        // Play lowest of the higher cards (conservative win)
+        card=higher[0];
+      }else{
+        // No higher card — must still play led suit, play lowest
+        card=suited[0];
+      }
     }else{
-      // Void in led suit — can play trump or discard
+      // Void in led suit — Rule 3: can only play trump if truly void
       const trumpCards=hand.filter(c=>parseCard(c).suit==="♠");
       const nonTrump=hand.filter(c=>parseCard(c).suit!=="♠");
-      // Simple: play lowest trump to capture, else discard lowest
+      // Try trump to steal trick, else discard lowest
       card=trumpCards.length?trumpCards[0]:nonTrump.length?nonTrump[0]:hand[0];
     }
   }else{
-    // Leading: play lowest non-trump to conserve trump
+    // Leading: play lowest non-trump
     const nonTrump=hand.filter(c=>parseCard(c).suit!=="♠");
     card=nonTrump.length?nonTrump[0]:hand[0];
   }
@@ -1567,6 +1875,78 @@ function startConfetti(){
   }
   draw();setTimeout(()=>cancelAnimationFrame(frame),9000);
 }
+
+// ── CHAT ──
+let chatOpen=false;
+let chatUnread=0;
+let chatListener=null;
+let lastChatTs=0;
+
+window.toggleChat=function(){
+  chatOpen=!chatOpen;
+  const panel=document.getElementById("chat-panel");
+  const btn=document.getElementById("btn-chat");
+  panel.style.display=chatOpen?"flex":"none";
+  if(chatOpen){
+    chatUnread=0;
+    btn.textContent="💬 Chat";
+    btn.removeAttribute("data-count");
+    btn.classList.remove("chat-unread");
+    setTimeout(()=>{
+      const msgs=document.getElementById("chat-messages");
+      msgs.scrollTop=msgs.scrollHeight;
+      document.getElementById("chat-input").focus();
+    },50);
+  }
+};
+
+window.sendChat=async function(){
+  const inp=document.getElementById("chat-input");
+  const text=inp.value.trim();
+  if(!text)return;
+  inp.value="";
+  const msg={pid:myId,name:myName,text,ts:Date.now()};
+  const newRef=ref(db,`rooms/${roomCode}/chat/${msg.ts}_${myId.slice(-4)}`);
+  await set(newRef,msg);
+};
+
+function listenChat(){
+  if(chatListener)return;
+  const chatRef=ref(db,`rooms/${roomCode}/chat`);
+  chatListener=onValue(chatRef,snap=>{
+    if(!snap.exists())return;
+    const msgs=document.getElementById("chat-messages");
+    if(!msgs)return;
+    msgs.innerHTML="";
+    const entries=Object.values(snap.val()||{}).sort((a,b)=>a.ts-b.ts);
+    entries.forEach(m=>{
+      const isMe=m.pid===myId;
+      const isNew=m.ts>lastChatTs&&!isMe;
+      const div=document.createElement("div");
+      div.className="chat-msg "+(isMe?"mine":"theirs");
+      div.innerHTML=`<span class="chat-sender">${isMe?"You":m.name}</span>
+        <div class="chat-bubble">${escHtml(m.text)}</div>`;
+      msgs.appendChild(div);
+      if(isNew&&!chatOpen){
+        chatUnread++;
+        playCardSound("chat");
+        const btn=document.getElementById("btn-chat");
+        btn.setAttribute("data-count",chatUnread);
+        btn.classList.add("chat-unread");
+        btn.textContent="💬 Chat ("+chatUnread+")";
+      }
+    });
+    lastChatTs=Math.max(...entries.map(e=>e.ts),lastChatTs);
+    if(chatOpen) msgs.scrollTop=msgs.scrollHeight;
+  });
+}
+
+function escHtml(t){
+  return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// Start chat listener once game starts
+const _origListenRoom=listenRoom;
 
 // ── SESSION KEEPALIVE — prevent auto-disconnect ──
 setInterval(()=>{
