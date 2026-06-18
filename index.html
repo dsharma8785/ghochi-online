@@ -95,33 +95,39 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .table-trick-label{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:.6rem;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
 
 /* ── CARD DESIGNS ── */
-.card{width:58px;height:86px;background:#fffef8;border-radius:8px;border:1px solid rgba(0,0,0,.18);display:flex;flex-direction:column;justify-content:space-between;padding:3px 4px;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .15s;flex-shrink:0;position:relative;box-shadow:0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.8);}
-.card::before{content:'';position:absolute;inset:2px;border-radius:6px;border:1px solid rgba(0,0,0,.06);pointer-events:none;}
-.card:hover:not(.disabled){transform:translateY(-8px);box-shadow:0 12px 24px rgba(0,0,0,.6);}
-.card.selected{transform:translateY(-14px);box-shadow:0 16px 32px rgba(245,197,24,.6);outline:2.5px solid var(--gold);}
-.card.disabled{opacity:.55;cursor:not-allowed;transform:none!important;}
-.card-top{display:flex;flex-direction:column;line-height:1.1;}
-.card-rank{font-family:'Baloo 2',cursive;font-weight:900;font-size:.95rem;line-height:1;}
-.card-suit-sm{font-size:.7rem;line-height:1;}
-.card-center-area{display:flex;align-items:center;justify-content:center;flex:1;}
-.card-face-art{font-size:1.5rem;line-height:1;text-align:center;}
-.card-center-pips{display:grid;align-items:center;justify-items:center;width:100%;gap:1px;}
-.card-pip{font-size:.85rem;line-height:1;}
-.card-bottom{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;transform:rotate(180deg);}
+.card{
+  width:72px;height:108px;
+  background:#fffef8;border-radius:8px;border:1px solid rgba(0,0,0,.2);
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:4px 5px;cursor:pointer;user-select:none;
+  transition:transform .15s,box-shadow .15s;flex-shrink:0;position:relative;
+  box-shadow:0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.9);
+  overflow:hidden;
+}
+.card::before{content:'';position:absolute;inset:3px;border-radius:5px;border:1px solid rgba(0,0,0,.07);pointer-events:none;}
+.card:hover:not(.disabled){transform:translateY(-10px);box-shadow:0 16px 28px rgba(0,0,0,.6);}
+.card.selected{transform:translateY(-16px);box-shadow:0 20px 36px rgba(245,197,24,.65);outline:2.5px solid var(--gold);}
+.card.disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+.card-top{display:flex;flex-direction:column;line-height:1;flex-shrink:0;}
+.card-rank{font-family:'Baloo 2',cursive;font-weight:900;font-size:1.05rem;line-height:1;}
+.card-suit-sm{font-size:.75rem;line-height:1;margin-top:-1px;}
+.card-center-area{display:flex;align-items:center;justify-content:center;flex:1;overflow:hidden;min-height:0;}
+.card-face-art{line-height:1;text-align:center;overflow:hidden;}
+.card-center-pips{display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;width:100%;height:100%;overflow:hidden;gap:0;}
+.pip-row{display:flex;justify-content:center;gap:4px;}
+.card-pip{line-height:1;}
+.card-bottom{display:flex;flex-direction:column;align-items:flex-end;line-height:1;transform:rotate(180deg);flex-shrink:0;}
 /* Colours */
 .card-red .card-rank,.card-red .card-suit-sm,.card-red .card-pip,.card-red .card-face-art{color:#cc1111;}
 .card-black .card-rank,.card-black .card-suit-sm,.card-black .card-pip,.card-black .card-face-art{color:#111122;}
 .card-trump{box-shadow:0 0 0 2.5px #f5c518,0 3px 10px rgba(0,0,0,.5)!important;background:linear-gradient(160deg,#fffef8 70%,#fff9e6);}
-/* Face card art backgrounds */
-.card-face{background:linear-gradient(160deg,#fff9f0,#fffef8);}
-.face-inner{position:absolute;inset:5px;border-radius:4px;border:1px solid rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;overflow:hidden;}
 /* Small trick cards */
 .trick-card-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
-.player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:64px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trick-winner-label{font-size:.6rem;color:var(--gold);font-weight:800;text-align:center;}
-.card-sm{width:44px;height:64px;border-radius:6px;padding:2px 3px;}
-.card-sm .card-rank{font-size:.78rem;}
-.card-sm .card-suit-sm{font-size:.6rem;}
+.card-sm{width:48px;height:70px;border-radius:6px;padding:3px 4px;}
+.card-sm .card-rank{font-size:.8rem;}
+.card-sm .card-suit-sm{font-size:.62rem;}
 .card-sm .card-face-art{font-size:1.1rem;}
 
 /* ── HAND AREA ── */
@@ -459,19 +465,37 @@ const RANKS=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 const ALL_SUITS=["♠","♥","♦","♣"];
 const RED_SUITS=["♥","♦"];
 const FACE_RANKS=["J","Q","K","A"];
-const FACE_ART={
-  "J♠":"🤴","J♥":"🥷","J♦":"🎭","J♣":"⚔️",
-  "Q♠":"👸","Q♥":"💃","Q♦":"🌹","Q♣":"🌙",
-  "K♠":"👑","K♥":"❤️","K♦":"💎","K♣":"♣️",
-  "A♠":"⭐","A♥":"💖","A♦":"💠","A♣":"🍀"
-};
-// Number pip layouts: count → grid rows of pips
-const PIP_LAYOUTS={
-  "2":[[0],[0]],"3":[[0],[0],[0]],"4":[[0,0],[0,0]],
-  "5":[[0,0],[0],[0,0]],"6":[[0,0],[0,0],[0,0]],
-  "7":[[0,0],[0],[0,0],[0,0]],"8":[[0,0],[0,0],[0,0],[0,0]],
-  "9":[[0,0],[0,0],[0],[0,0],[0,0]],"10":[[0,0],[0,0],[0,0],[0,0],[0,0]]
-};
+// Face card SVG art — classic playing card style
+function makeFaceSVG(rank,suit,isRed,small){
+  const col=isRed?"#cc1111":"#111122";
+  const s=suit;
+  const sz=small?44:64;
+  // Crown for King, tiara for Queen, feather for Jack
+  const crown=rank==="K"
+    ?`<path d="M${sz*.2},${sz*.65} L${sz*.2},${sz*.45} L${sz*.35},${sz*.55} L${sz*.5},${sz*.3} L${sz*.65},${sz*.55} L${sz*.8},${sz*.45} L${sz*.8},${sz*.65} Z" fill="${col}" opacity=".85"/>
+       <circle cx="${sz*.5}" cy="${sz*.28}" r="${sz*.05}" fill="${col}"/>
+       <circle cx="${sz*.2}" cy="${sz*.43}" r="${sz*.04}" fill="${col}"/>
+       <circle cx="${sz*.8}" cy="${sz*.43}" r="${sz*.04}" fill="${col}"/>`
+    :rank==="Q"
+    ?`<path d="M${sz*.3},${sz*.62} Q${sz*.5},${sz*.35} ${sz*.7},${sz*.62}" stroke="${col}" stroke-width="2.5" fill="none"/>
+       <circle cx="${sz*.5}" cy="${sz*.32}" r="${sz*.09}" fill="${col}" opacity=".8"/>
+       <path d="M${sz*.38},${sz*.32} L${sz*.5},${sz*.22} L${sz*.62},${sz*.32}" fill="${col}"/>`
+    :`<path d="M${sz*.5},${sz*.25} L${sz*.5},${sz*.68}" stroke="${col}" stroke-width="2.5"/>
+       <path d="M${sz*.35},${sz*.35} L${sz*.5},${sz*.25} L${sz*.65},${sz*.35}" stroke="${col}" stroke-width="2" fill="none"/>
+       <path d="M${sz*.35},${sz*.62} L${sz*.65},${sz*.62}" stroke="${col}" stroke-width="2"/>`;
+  // Body silhouette
+  const body=`<ellipse cx="${sz*.5}" cy="${sz*.78}" rx="${sz*.22}" ry="${sz*.14}" fill="${col}" opacity=".6"/>
+    <rect x="${sz*.35}" y="${sz*.64}" width="${sz*.3}" height="${sz*.18}" rx="3" fill="${col}" opacity=".7"/>`;
+  // Face circle
+  const face=`<circle cx="${sz*.5}" cy="${sz*.5}" r="${sz*.13}" fill="${col}" opacity=".15" stroke="${col}" stroke-width="1.5"/>`;
+  // Suit corner decorations
+  const suits=`<text x="${sz*.18}" y="${sz*.28}" font-size="${sz*.18}px" text-anchor="middle" fill="${col}" opacity=".5">${s}</text>
+    <text x="${sz*.82}" y="${sz*.82}" font-size="${sz*.18}px" text-anchor="middle" fill="${col}" opacity=".5" transform="rotate(180,${sz*.82},${sz*.74})">${s}</text>`;
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible;">
+    ${suits}${face}${body}${crown}
+  </svg>`;
+}
+// PIP_ROWS defined inside makeCardEl
 
 // ── STATE ──
 let myName="",myId="",roomCode="",roomRef=null,isHost=false;
@@ -522,7 +546,34 @@ function sortCards(ids,trump){
   });
 }
 
-// ── CARD RENDERING ── (proper designs with face art and pips)
+// ── CARD RENDERING ──
+// Pip layout: each entry is a row; 0=single pip, [0,0]=two pips side by side
+// Positions designed to match real card pip arrangements
+const PIP_ROWS={
+  "2":[[1],[1]],
+  "3":[[1],[1],[1]],
+  "4":[[2],[2]],
+  "5":[[2],[1],[2]],
+  "6":[[2],[2],[2]],
+  "7":[[2],[2],[1],[2]],
+  "8":[[2],[2],[2],[2]],
+  "9":[[2],[2],[1],[2],[2]],
+  "10":[[2],[2],[2],[2],[2]]
+};
+
+function makePips(rank,suit,small){
+  const rows=PIP_ROWS[rank];
+  if(!rows)return'';
+  const fs=small?"font-size:.65rem":"font-size:.82rem";
+  const gap=small?"gap:3px":"gap:5px";
+  const vgap=small?"gap:2px":"gap:3px";
+  const rowsHTML=rows.map(r=>{
+    const pips=r===1?suit:suit+" "+suit;
+    return `<div class="pip-row" style="${gap}">${r===2?`<span class="card-pip" style="${fs}">${suit}</span><span class="card-pip" style="${fs}">${suit}</span>`:`<span class="card-pip" style="${fs}">${suit}</span>`}</div>`;
+  }).join("");
+  return`<div class="card-center-pips" style="${vgap}">${rowsHTML}</div>`;
+}
+
 function makeCardEl(cid,opts={}){
   const{small=false,disabled=false,faceDown=false,selected=false}=opts;
   const c=parseCard(cid);
@@ -531,38 +582,41 @@ function makeCardEl(cid,opts={}){
   const isFace=FACE_RANKS.includes(c.rank);
   const el=document.createElement("div");
   const sz=small?"card card-sm":"card";
-  el.className=`${sz} card-${isRed?"red":"black"}${isTrump?" card-trump":""}${isFace&&!small?" card-face":""}${selected?" selected":""}${disabled?" disabled":""}`;
+  el.className=`${sz} card-${isRed?"red":"black"}${isTrump?" card-trump":""}${selected?" selected":""}${disabled?" disabled":""}`;
 
   if(faceDown){
-    el.style.background="linear-gradient(135deg,#1a237e,#283593)";
-    el.innerHTML=`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:${small?"1.2rem":"1.6rem"};opacity:.4;">🃏</div>`;
+    el.style.cssText="background:linear-gradient(135deg,#1a237e,#283593);display:flex;align-items:center;justify-content:center;";
+    el.innerHTML=`<span style="font-size:${small?"1.4":"1.8"}rem;opacity:.4">🃏</span>`;
     return el;
   }
 
-  const suitSymbol=c.suit;
-  // Center area
+  const s=c.suit;
+  const col=isRed?"#cc1111":"#111122";
   let centerHTML="";
+
   if(isFace){
-    const art=FACE_ART[c.rank+c.suit]||suitSymbol;
-    centerHTML=`<div class="card-face-art" style="font-size:${small?"1.1rem":"1.7rem"}">${art}</div>`;
+    // Classic playing card face — SVG figure
+    centerHTML=makeFaceSVG(c.rank,s,isRed,small);
   } else if(c.rank==="A"){
-    centerHTML=`<div class="card-face-art" style="font-size:${small?"1.5rem":"2rem"}">${suitSymbol}</div>`;
+    // Ace: large centred suit
+    const fs=small?"2rem":"2.8rem";
+    centerHTML=`<span class="card-face-art" style="font-size:${fs};color:${col};">${s}</span>`;
   } else {
-    // Number pip layout
-    const n=parseInt(c.rank)||0;
-    const rows=PIP_LAYOUTS[c.rank];
-    if(rows){
-      const pipRows=rows.map(row=>`<div style="display:flex;gap:${small?"3px":"5px"};justify-content:center;">${row.map(()=>`<span class="card-pip">${suitSymbol}</span>`).join("")}</div>`).join("");
-      centerHTML=`<div class="card-center-pips" style="font-size:${small?".55rem":".72rem"}">${pipRows}</div>`;
-    }else{
-      centerHTML=`<div class="card-face-art">${suitSymbol}</div>`;
-    }
+    centerHTML=makePips(c.rank,s,small);
   }
 
+  const rankFS=small?"font-size:.8rem":"font-size:1.05rem";
+  const suitFS=small?"font-size:.62rem":"font-size:.75rem";
   el.innerHTML=`
-    <div class="card-top"><div class="card-rank">${c.rank}</div><div class="card-suit-sm">${suitSymbol}</div></div>
+    <div class="card-top">
+      <div class="card-rank" style="${rankFS}">${c.rank}</div>
+      <div class="card-suit-sm" style="${suitFS};color:${col}">${s}</div>
+    </div>
     <div class="card-center-area">${centerHTML}</div>
-    <div class="card-bottom"><div class="card-rank">${c.rank}</div><div class="card-suit-sm">${suitSymbol}</div></div>`;
+    <div class="card-bottom">
+      <div class="card-rank" style="${rankFS}">${c.rank}</div>
+      <div class="card-suit-sm" style="${suitFS};color:${col}">${s}</div>
+    </div>`;
   return el;
 }
 
@@ -1063,7 +1117,11 @@ async function doPlayCard(pid,cardToPlay,state){
 
   const updates={};
   updates[`rooms/${roomCode}/hands/${pid}`]=myHand;
-  updates[`rooms/${roomCode}/currentTrick/cards/${pid}`]=cardToPlay;
+  // Only write partial card update when NOT the last card.
+  // When allPlayed, we write the full currentTrick reset instead (no conflict).
+  if(!allPlayed){
+    updates[`rooms/${roomCode}/currentTrick/cards/${pid}`]=cardToPlay;
+  }
 
   if(allPlayed){
     const trump=getHukumSuit();
