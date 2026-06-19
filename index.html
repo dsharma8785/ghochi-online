@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
 <title>🃏 Ghochi — Play Online</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700;800&family=Cinzel:wght@600;700&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#0d1117;--surface:#161b22;--card:#1c2230;--border:rgba(255,255,255,0.08);
@@ -12,6 +12,7 @@
   --purple:#9b59b6;--pink:#e84393;--text:#e6edf3;--muted:#8b949e;
   --radius:16px;--shadow:0 8px 32px rgba(0,0,0,0.5);
   --table-green:#1a4a2a;--felt:#15391f;
+  --maroon:#8a1f1f;--maroon2:#9c1f1f;--indigo:#1a1a4a;--cream:#fbf3df;--antiquegold:#c9962c;--antiquegold2:#9c6f0e;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
@@ -93,42 +94,62 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .seat-name.my-seat{border:1.5px solid var(--gold);}
 .seat-cards-count{font-size:.6rem;color:var(--muted);font-weight:700;}
 .table-trick-label{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:.6rem;font-weight:800;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;}
+#live-trick-hud{display:flex;justify-content:center;padding:8px 12px 0;background:var(--felt);}
+.trick-hud-pill{background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.4);border-radius:50px;padding:6px 14px;display:flex;align-items:center;gap:8px;font-size:.78rem;}
+.trick-hud-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);animation:trickHudPulse 1.4s infinite;flex-shrink:0;}
+@keyframes trickHudPulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.trick-hud-name{color:var(--gold);font-weight:800;}
+.reaction-emoji-btn{font-size:1.3rem;cursor:pointer;transition:transform .15s;user-select:none;}
+.reaction-emoji-btn:hover{transform:scale(1.25);}
+.floating-reaction{position:absolute;font-size:1.8rem;pointer-events:none;animation:floatUpReaction 1.6s ease-out forwards;}
+@keyframes floatUpReaction{0%{opacity:1;transform:translateY(0) scale(.6);}30%{transform:translateY(-20px) scale(1.2);}100%{opacity:0;transform:translateY(-90px) scale(1);}}
+@keyframes hukumFlourish{
+  0%{opacity:0;transform:scale(.7) translateY(8px);}
+  55%{opacity:1;transform:scale(1.12) translateY(-3px);box-shadow:0 0 22px rgba(201,150,44,.55);}
+  100%{opacity:1;transform:scale(1) translateY(0);box-shadow:none;}
+}
+.hukum-bar.flourish-play{animation:hukumFlourish .7s ease-out;}
 
-/* ── CARD DESIGNS ── */
+/* ── CARD DESIGNS (Ganjifa Royal) ── */
 .card{
   width:72px;height:108px;
-  background:#fffef8;border-radius:8px;border:1px solid rgba(0,0,0,.2);
+  background:var(--cream);border-radius:8px;border:1.5px solid var(--maroon);
   display:flex;flex-direction:column;justify-content:space-between;
-  padding:4px 5px;cursor:pointer;user-select:none;
+  padding:6px 6px;cursor:pointer;user-select:none;
   transition:transform .15s,box-shadow .15s;flex-shrink:0;position:relative;
-  box-shadow:0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.9);
+  box-shadow:0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.7);
   overflow:hidden;
 }
-.card::before{content:'';position:absolute;inset:3px;border-radius:5px;border:1px solid rgba(0,0,0,.07);pointer-events:none;}
+.card::before{content:none;}
 .card:hover:not(.disabled){transform:translateY(-10px);box-shadow:0 16px 28px rgba(0,0,0,.6);}
 .card.selected{transform:translateY(-16px);box-shadow:0 20px 36px rgba(245,197,24,.65);outline:2.5px solid var(--gold);}
 .card.disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
-.card-top{display:flex;flex-direction:column;line-height:1;flex-shrink:0;}
-.card-rank{font-family:'Baloo 2',cursive;font-weight:900;font-size:1.05rem;line-height:1;}
-.card-suit-sm{font-size:.75rem;line-height:1;margin-top:-1px;}
+.card-top{display:flex;flex-direction:column;align-items:center;line-height:1;flex-shrink:0;font-family:'Cinzel',serif;}
+.card-rank{font-family:'Cinzel',serif;font-weight:700;font-size:1.05rem;line-height:1;}
+.card-suit-sm{font-size:.72rem;line-height:1;margin-top:1px;}
 .card-center-area{display:flex;align-items:center;justify-content:center;flex:1;overflow:hidden;min-height:0;}
 .card-face-art{line-height:1;text-align:center;overflow:hidden;}
 .card-center-pips{display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;width:100%;height:100%;overflow:hidden;gap:0;}
-.pip-row{display:flex;justify-content:center;gap:4px;}
+.pip-row{display:flex;justify-content:center;gap:7px;}
 .card-pip{line-height:1;}
-.card-bottom{display:flex;flex-direction:column;align-items:flex-end;line-height:1;transform:rotate(180deg);flex-shrink:0;}
+.card-bottom{display:flex;flex-direction:column;align-items:center;line-height:1;transform:rotate(180deg);flex-shrink:0;font-family:'Cinzel',serif;}
 /* Colours */
-.card-red .card-rank,.card-red .card-suit-sm,.card-red .card-pip,.card-red .card-face-art{color:#cc1111;}
-.card-black .card-rank,.card-black .card-suit-sm,.card-black .card-pip,.card-black .card-face-art{color:#111122;}
-.card-trump{box-shadow:0 0 0 2.5px #f5c518,0 3px 10px rgba(0,0,0,.5)!important;background:linear-gradient(160deg,#fffef8 70%,#fff9e6);}
+.card-red .card-rank,.card-red .card-suit-sm,.card-red .card-pip,.card-red .card-face-art{color:var(--maroon2);}
+.card-black .card-rank,.card-black .card-suit-sm,.card-black .card-pip,.card-black .card-face-art{color:var(--indigo);}
+.card-trump{box-shadow:0 0 0 2.5px #f5c518,0 3px 10px rgba(0,0,0,.5)!important;background:linear-gradient(160deg,var(--cream) 70%,#f7e9c4);}
 /* Small trick cards */
 .trick-card-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trick-winner-label{font-size:.6rem;color:var(--gold);font-weight:800;text-align:center;}
-.card-sm{width:48px;height:70px;border-radius:6px;padding:3px 4px;}
+.card-sm{width:48px;height:70px;border-radius:6px;padding:4px 4px;}
 .card-sm .card-rank{font-size:.8rem;}
-.card-sm .card-suit-sm{font-size:.62rem;}
+.card-sm .card-suit-sm{font-size:.6rem;}
 .card-sm .card-face-art{font-size:1.1rem;}
+.card-sm .pip-row{gap:4px;}
+.ace-medallion{width:78%;height:78%;border-radius:50%;border:2px solid var(--antiquegold2);display:flex;align-items:center;justify-content:center;position:relative;}
+.ace-medallion::after{content:'';position:absolute;inset:4px;border-radius:50%;border:1px dashed var(--antiquegold2);opacity:.6;}
+.ace-medallion-sm{border-width:1.5px;}
+.ace-medallion-sm::after{inset:2px;}
 
 /* ── HAND AREA ── */
 .hand-area{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
@@ -186,8 +207,8 @@ input::placeholder{color:var(--muted);font-weight:600;}
 #deal-overlay{position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
 #deal-overlay.show{display:flex;}
 .deal-deck{position:relative;width:58px;height:86px;margin:0 auto;}
-.deal-card-anim{position:absolute;width:58px;height:86px;background:linear-gradient(135deg,#1a237e,#283593);border-radius:8px;border:2px solid rgba(255,255,255,.15);box-shadow:0 4px 16px rgba(0,0,0,.5);top:0;left:0;}
-.deal-card-anim::after{content:'🃏';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;opacity:.4;}
+.deal-card-anim{position:absolute;width:58px;height:86px;background:var(--maroon2);border-radius:8px;border:2px solid var(--antiquegold2);box-shadow:0 4px 16px rgba(0,0,0,.5);top:0;left:0;}
+.deal-card-anim::after{content:'घ';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.2rem;font-weight:700;color:var(--antiquegold2);opacity:.85;}
 @keyframes dealFly{0%{transform:translate(0,0) rotate(0deg);opacity:1;}100%{transform:var(--deal-to);opacity:0;}}
 .deal-card-flying{animation:dealFly .45s ease-in forwards;}
 .deal-title{color:var(--gold);font-family:'Baloo 2',cursive;font-size:1.4rem;font-weight:800;}
@@ -323,13 +344,17 @@ input::placeholder{color:var(--muted);font-weight:600;}
   <!-- PLAY TAB -->
   <div id="gtab-play" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
     <!-- Table area with player seats -->
-    <div class="table-area">
+    <div class="table-area" id="table-area-reactions" style="position:relative;">
       <div class="round-table" id="round-table">
         <div class="table-trick-label" id="trick-table-label">Current Trick</div>
         <div class="table-cards" id="trick-cards-display"></div>
         <!-- Seats injected by JS -->
       </div>
+      <!-- Floating reaction emojis render here -->
+      <div id="reaction-overlay" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
     </div>
+    <!-- Live trick winner HUD: shows who is currently winning the trick, before it resolves -->
+    <div id="live-trick-hud" style="display:none;"></div>
     <!-- Cards played this trick strip -->
     <div class="cards-played-strip" id="cards-played-strip">
       <span class="cards-played-label">TRICK:</span>
@@ -348,10 +373,19 @@ input::placeholder{color:var(--muted);font-weight:600;}
       </div>
       <div class="hand-cards" id="my-hand-cards"></div>
     </div>
-    <div style="padding:10px 16px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <div style="padding:10px 16px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;position:relative;">
       <button class="btn btn-gold" id="btn-play-card" onclick="playSelectedCard()" disabled>▶ Play Card</button>
       <button class="btn btn-ghost btn-sm" onclick="sortHand()">Sort ♥♦♣♠</button>
       <button class="btn btn-ghost btn-sm" id="btn-chat" onclick="toggleChat()">💬 Chat</button>
+      <button class="btn btn-ghost btn-sm" id="btn-react" onclick="toggleReactionPicker()">😄 React</button>
+      <div id="reaction-picker" style="display:none;position:absolute;bottom:54px;right:16px;background:var(--card);border:1.5px solid var(--border);border-radius:50px;padding:8px 10px;display:flex;gap:6px;box-shadow:var(--shadow);z-index:20;">
+        <span class="reaction-emoji-btn" onclick="sendReaction('😂')">😂</span>
+        <span class="reaction-emoji-btn" onclick="sendReaction('🔥')">🔥</span>
+        <span class="reaction-emoji-btn" onclick="sendReaction('😱')">😱</span>
+        <span class="reaction-emoji-btn" onclick="sendReaction('👏')">👏</span>
+        <span class="reaction-emoji-btn" onclick="sendReaction('😤')">😤</span>
+        <span class="reaction-emoji-btn" onclick="sendReaction('🤝')">🤝</span>
+      </div>
     </div>
 
     <!-- CHAT PANEL -->
@@ -397,6 +431,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
   <!-- SCORES TAB -->
   <div id="gtab-scores" style="display:none;flex:1;overflow-y:auto;padding:16px;">
     <div id="scores-list"></div>
+    <button class="btn btn-ghost btn-full btn-sm" style="margin-top:10px;" onclick="openReplay()">⏪ Replay Last Round's Tricks</button>
     <div class="divider"></div>
     <div id="round-history-section"></div>
   </div>
@@ -428,6 +463,22 @@ input::placeholder{color:var(--muted);font-weight:600;}
     <h2>📊 Final Scores</h2>
     <div id="full-scores-body"></div>
     <button class="btn btn-ghost btn-full btn-sm" style="margin-top:14px;" onclick="document.getElementById('full-scores-modal').classList.remove('show')">Close</button>
+  </div>
+</div>
+<div class="modal-bg" id="replay-modal">
+  <div class="modal-box" style="max-width:420px;">
+    <h2>⏪ Trick Replay</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <button class="btn btn-ghost btn-sm" id="replay-prev-btn" onclick="replayStep(-1)">◀ Prev</button>
+      <div style="font-family:'Baloo 2',cursive;font-size:.95rem;">Trick <span id="replay-trick-num">1</span> of <span id="replay-trick-total">13</span></div>
+      <button class="btn btn-ghost btn-sm" id="replay-next-btn" onclick="replayStep(1)">Next ▶</button>
+    </div>
+    <div id="replay-cards-area" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;min-height:80px;"></div>
+    <div id="replay-meta" style="text-align:center;font-size:.8rem;color:var(--muted);margin-bottom:10px;"></div>
+    <div style="height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;">
+      <div id="replay-progress-bar" style="width:0%;height:100%;background:linear-gradient(90deg,var(--gold),var(--pink, #e84393));"></div>
+    </div>
+    <button class="btn btn-ghost btn-full btn-sm" style="margin-top:16px;" onclick="closeReplay()">Close</button>
   </div>
 </div>
 <div class="modal-bg" id="redeal-modal">
@@ -493,137 +544,77 @@ const app=initializeApp(firebaseConfig);
 const db=getDatabase(app);
 
 // ── CONSTANTS ──
-const TEAM_COLORS=["#e74c3c","#3498db","#2ecc71","#f5c518"];
-const DEFAULT_TEAM_NAMES=["Team Red","Team Blue","Team Green","Team Gold"];
+// Ganjifa Royal themed team colors — kept visually distinct from one another (important for
+// gameplay clarity) while drawing from the same palette family as the redesigned cards.
+const TEAM_COLORS=["#d33b30","#4f8fb8","#2f7d4f","#c9962c"];
+const DEFAULT_TEAM_NAMES=["Team Maroon","Team Indigo","Team Emerald","Team Gold"];
 const RANKS=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 const ALL_SUITS=["♠","♥","♦","♣"];
 const RED_SUITS=["♥","♦"];
 const FACE_RANKS=["J","Q","K","A"];
-// ── FACE CARD SVG ART ── Standard playing card figures (mirrored, bordered)
+// ── FACE CARD SVG ART ── Ganjifa Royal medallion-style court portraits
 function makeFaceSVG(rank,suit,isRed,small){
-  const W=small?40:62, H=small?56:88;
-  const suitCol=isRed?"#cc0000":"#111133";
-  const robeCol=isRed?"#cc2222":"#1a1a6e";
-  const robeHL=isRed?"#ee5555":"#3333aa";
-  const goldCol="#c8980a";
-  const skinCol="#f5ddb0";
-  const hairCol=isRed?"#4a2800":"#222222";
-  const W2=W/2, H2=H/2;
-  const px=(n)=>+(W*n).toFixed(2);
-  const py=(n)=>+(H*n).toFixed(2);
+  const goldCol="#9c6f0e",ringCol="#9c6f0e",creamCol="#fbf3df",skinCol="#e8b07a";
+  const robeCol=isRed?"#9c1f1f":"#1a1a4a";
+  const robeDark=isRed?"#6e1414":"#10102e";
+  const hairCol="#2a1810";
+  const W=small?40:62, H=small?40:62;
+  const cx=W/2, cy=H/2;
+  const r=W*0.46;
 
-  const border=
-    '<rect x="'+px(.06)+'" y="'+py(.03)+'" width="'+px(.88)+'" height="'+py(.94)+'" rx="'+px(.04)+'" fill="none" stroke="'+suitCol+'" stroke-width="'+px(.022)+'" opacity=".35"/>'+
-    '<rect x="'+px(.09)+'" y="'+py(.045)+'" width="'+px(.82)+'" height="'+py(.91)+'" rx="'+px(.03)+'" fill="none" stroke="'+suitCol+'" stroke-width="'+px(.01)+'" opacity=".2"/>';
-
-  const centPip='<text x="'+W2+'" y="'+H2+'" font-size="'+(small?7:10)+'px" text-anchor="middle" dominant-baseline="middle" fill="'+suitCol+'" opacity=".15" font-family="serif">'+suit+'</text>';
-
-  function faceEl(cx,cy){
-    const fw=px(.16),fh=py(.14);
-    const ey=cy-fh*.1, ex=fw*.38, my=cy+fh*.28, ny=cy+fh*.1;
-    const browOff=fh*.045;
-    return (
-      '<ellipse cx="'+(cx-px(.04))+'" cy="'+cy+'" rx="'+px(.04)+'" ry="'+py(.05)+'" fill="'+skinCol+'"/>'+
-      '<ellipse cx="'+(cx+px(.04))+'" cy="'+cy+'" rx="'+px(.04)+'" ry="'+py(.05)+'" fill="'+skinCol+'"/>'+
-      '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+fw+'" ry="'+fh+'" fill="'+skinCol+'"/>'+
-      '<ellipse cx="'+cx+'" cy="'+(cy-fh*.38)+'" rx="'+(fw*.95)+'" ry="'+py(.04)+'" fill="'+hairCol+'"/>'+
-      '<ellipse cx="'+(cx-ex)+'" cy="'+ey+'" rx="'+px(.028)+'" ry="'+py(.018)+'" fill="#222"/>'+
-      '<ellipse cx="'+(cx+ex)+'" cy="'+ey+'" rx="'+px(.028)+'" ry="'+py(.018)+'" fill="#222"/>'+
-      '<line x1="'+(cx-ex-px(.04))+'" y1="'+(ey-browOff)+'" x2="'+(cx-ex+px(.04))+'" y2="'+(ey-browOff*.4)+'" stroke="'+hairCol+'" stroke-width="'+px(.016)+'" stroke-linecap="round"/>'+
-      '<line x1="'+(cx+ex-px(.04))+'" y1="'+(ey-browOff*.4)+'" x2="'+(cx+ex+px(.04))+'" y2="'+(ey-browOff)+'" stroke="'+hairCol+'" stroke-width="'+px(.016)+'" stroke-linecap="round"/>'+
-      '<path d="M'+(cx-px(.015))+','+(ny-py(.02))+'Q'+cx+','+(ny+py(.03))+' '+(cx+px(.015))+','+(ny-py(.02))+'" stroke="'+hairCol+'" stroke-width="'+px(.012)+'" fill="none" opacity=".6"/>'+
-      '<path d="M'+(cx-px(.07))+','+my+'Q'+cx+','+(my+py(.02))+' '+(cx+px(.07))+','+my+'" stroke="'+hairCol+'" stroke-width="'+px(.016)+'" fill="none"/>'
+  function faceUnit(){
+    return(
+      `<ellipse cx="${cx}" cy="${cy+H*0.05}" rx="${W*0.17}" ry="${H*0.2}" fill="${skinCol}"/>`+
+      `<path d="M${cx-W*0.16},${cy-H*0.02} Q${cx},${cy-H*0.13} ${cx+W*0.16},${cy-H*0.02}" fill="none" stroke="${hairCol}" stroke-width="${W*0.035}"/>`+
+      `<circle cx="${cx-W*0.07}" cy="${cy+H*0.02}" r="${W*0.02}" fill="${hairCol}"/>`+
+      `<circle cx="${cx+W*0.07}" cy="${cy+H*0.02}" r="${W*0.02}" fill="${hairCol}"/>`+
+      `<path d="M${cx-W*0.05},${cy+H*0.16} Q${cx},${cy+H*0.2} ${cx+W*0.05},${cy+H*0.16}" fill="none" stroke="${robeDark}" stroke-width="${W*0.025}"/>`
     );
   }
 
-  function robeEl(topY,botY){
-    return (
-      '<path d="M'+px(.1)+','+topY+'L'+px(.9)+','+topY+'L'+px(.95)+','+botY+'L'+px(.05)+','+botY+'Z" fill="'+robeCol+'" stroke="'+suitCol+'" stroke-width=".4"/>'+
-      '<rect x="'+(W2-px(.06))+'" y="'+topY+'" width="'+px(.12)+'" height="'+(botY-topY)+'" fill="'+robeHL+'" opacity=".3"/>'+
-      '<path d="M'+px(.28)+','+topY+'L'+W2+','+(topY+py(.05))+'L'+px(.72)+','+topY+'" fill="white" opacity=".8" stroke="'+suitCol+'" stroke-width=".4"/>'
+  function shouldersUnit(){
+    return(
+      `<path d="M${cx-W*0.34},${cy+H*0.46} Q${cx},${cy+H*0.3} ${cx+W*0.34},${cy+H*0.46} L${cx+W*0.34},${cy+H*0.52} L${cx-W*0.34},${cy+H*0.52} Z" fill="${robeCol}" stroke="${robeDark}" stroke-width="0.6"/>`+
+      `<path d="M${cx-W*0.13},${cy+H*0.46} L${cx},${cy+H*0.5} L${cx+W*0.13},${cy+H*0.46}" fill="none" stroke="${goldCol}" stroke-width="${W*0.022}"/>`
     );
   }
 
-  function kingSVG(){
-    const crownY=py(.06), crownH=py(.1);
-    const faceCY=crownY+crownH+py(.1);
-    const robeTop=faceCY+py(.12), robeBot=H2-py(.01);
-    const crown=
-      '<path d="M'+px(.15)+','+(crownY+crownH)+'L'+px(.15)+','+(crownY+crownH*.4)+'L'+px(.3)+','+(crownY+crownH*.65)+'L'+W2+','+crownY+'L'+px(.7)+','+(crownY+crownH*.65)+'L'+px(.85)+','+(crownY+crownH*.4)+'L'+px(.85)+','+(crownY+crownH)+'Z" fill="'+goldCol+'" stroke="#8a6800" stroke-width=".6"/>'+
-      '<rect x="'+px(.13)+'" y="'+(crownY+crownH-py(.02))+'" width="'+px(.74)+'" height="'+py(.02)+'" fill="'+goldCol+'"/>'+
-      '<circle cx="'+W2+'" cy="'+(crownY+py(.01))+'" r="'+px(.045)+'" fill="#e74c3c" stroke="#900" stroke-width=".5"/>'+
-      '<circle cx="'+px(.18)+'" cy="'+(crownY+crownH*.45)+'" r="'+px(.032)+'" fill="#3498db"/>'+
-      '<circle cx="'+px(.82)+'" cy="'+(crownY+crownH*.45)+'" r="'+px(.032)+'" fill="#2ecc71"/>';
-    const beard=
-      '<path d="M'+px(.3)+','+(faceCY+py(.1))+'Q'+W2+','+(faceCY+py(.2))+' '+px(.7)+','+(faceCY+py(.1))+'" stroke="'+hairCol+'" stroke-width="'+px(.025)+'" fill="none" stroke-linecap="round"/>'+
-      '<path d="M'+px(.33)+','+(faceCY+py(.07))+'Q'+W2+','+(faceCY+py(.14))+' '+px(.67)+','+(faceCY+py(.07))+'" stroke="'+hairCol+'" stroke-width="'+px(.014)+'" fill="none" opacity=".5"/>';
-    const sceptre=
-      '<line x1="'+px(.78)+'" y1="'+(robeTop+py(.02))+'" x2="'+px(.76)+'" y2="'+(robeBot-py(.02))+'" stroke="'+goldCol+'" stroke-width="'+px(.025)+'"/>'+
-      '<circle cx="'+px(.78)+'" cy="'+robeTop+'" r="'+px(.04)+'" fill="'+goldCol+'" stroke="#8a6800" stroke-width=".5"/>';
-    return crown+robeEl(robeTop,robeBot)+faceEl(W2,faceCY)+beard+sceptre;
+  function kingMotif(){
+    return `<path d="M${cx-W*0.18},${cy-H*0.32} L${cx-W*0.15},${cy-H*0.43} L${cx-W*0.07},${cy-H*0.36} L${cx},${cy-H*0.47} L${cx+W*0.07},${cy-H*0.36} L${cx+W*0.15},${cy-H*0.43} L${cx+W*0.18},${cy-H*0.32} Z" fill="${goldCol}" stroke="#6e4d09" stroke-width="0.5"/>`+
+      `<circle cx="${cx}" cy="${cy-H*0.47}" r="${W*0.025}" fill="${isRed?'#9c1f1f':'#1a1a4a'}"/>`;
+  }
+  function queenMotif(){
+    return `<path d="M${cx-W*0.16},${cy-H*0.3} Q${cx},${cy-H*0.46} ${cx+W*0.16},${cy-H*0.3}" fill="none" stroke="${goldCol}" stroke-width="${W*0.032}"/>`+
+      `<circle cx="${cx}" cy="${cy-H*0.42}" r="${W*0.028}" fill="${isRed?'#9c1f1f':'#1a1a4a'}"/>`+
+      `<circle cx="${cx-W*0.12}" cy="${cy-H*0.27}" r="${W*0.018}" fill="${goldCol}"/>`+
+      `<circle cx="${cx+W*0.12}" cy="${cy-H*0.27}" r="${W*0.018}" fill="${goldCol}"/>`;
+  }
+  function jackMotif(){
+    return `<path d="M${cx-W*0.17},${cy-H*0.27} Q${cx},${cy-H*0.4} ${cx+W*0.17},${cy-H*0.27} Q${cx+W*0.14},${cy-H*0.32} ${cx},${cy-H*0.34} Q${cx-W*0.14},${cy-H*0.32} ${cx-W*0.17},${cy-H*0.27} Z" fill="${robeCol}" stroke="${robeDark}" stroke-width="0.5"/>`+
+      `<circle cx="${cx}" cy="${cy-H*0.36}" r="${W*0.022}" fill="${goldCol}"/>`;
   }
 
-  function queenSVG(){
-    const tiaraY=py(.07), tiaraH=py(.07);
-    const faceCY=tiaraY+tiaraH+py(.1);
-    const robeTop=faceCY+py(.12), robeBot=H2-py(.01);
-    const tiara=
-      '<path d="M'+px(.18)+','+(tiaraY+tiaraH)+'Q'+W2+','+tiaraY+' '+px(.82)+','+(tiaraY+tiaraH)+'" stroke="'+goldCol+'" stroke-width="'+px(.028)+'" fill="none"/>'+
-      '<circle cx="'+W2+'" cy="'+(tiaraY+py(.01))+'" r="'+px(.042)+'" fill="#e74c3c" stroke="#900" stroke-width=".5"/>'+
-      '<circle cx="'+px(.3)+'" cy="'+(tiaraY+tiaraH*.5)+'" r="'+px(.026)+'" fill="'+goldCol+'"/>'+
-      '<circle cx="'+px(.7)+'" cy="'+(tiaraY+tiaraH*.5)+'" r="'+px(.026)+'" fill="'+goldCol+'"/>';
-    const hair=
-      '<path d="M'+px(.33)+','+(tiaraY+tiaraH)+'Q'+px(.18)+','+faceCY+' '+px(.2)+','+robeTop+'" stroke="'+hairCol+'" stroke-width="'+px(.044)+'" fill="none" stroke-linecap="round"/>'+
-      '<path d="M'+px(.67)+','+(tiaraY+tiaraH)+'Q'+px(.82)+','+faceCY+' '+px(.8)+','+robeTop+'" stroke="'+hairCol+'" stroke-width="'+px(.044)+'" fill="none" stroke-linecap="round"/>';
-    const orb=
-      '<line x1="'+px(.22)+'" y1="'+(robeTop+py(.04))+'" x2="'+px(.22)+'" y2="'+(robeTop+py(.11))+'" stroke="'+skinCol+'" stroke-width="'+px(.03)+'"/>'+
-      '<circle cx="'+px(.22)+'" cy="'+(robeTop+py(.17))+'" r="'+px(.065)+'" fill="'+goldCol+'" stroke="#8a6800" stroke-width=".6"/>'+
-      '<circle cx="'+px(.22)+'" cy="'+(robeTop+py(.17))+'" r="'+px(.03)+'" fill="'+suitCol+'" opacity=".4"/>';
-    return tiara+hair+robeEl(robeTop,robeBot)+faceEl(W2,faceCY)+orb;
-  }
+  let motif="";
+  if(rank==="K") motif=kingMotif();
+  else if(rank==="Q") motif=queenMotif();
+  else motif=jackMotif();
 
-  function jackSVG(){
-    const hatBrimY=py(.07), hatH=py(.1);
-    const faceCY=hatBrimY+hatH+py(.1);
-    const robeTop=faceCY+py(.12), robeBot=H2-py(.01);
-    const hat=
-      '<ellipse cx="'+W2+'" cy="'+(hatBrimY+hatH)+'" rx="'+px(.38)+'" ry="'+py(.04)+'" fill="'+robeCol+'" stroke="'+suitCol+'" stroke-width=".5"/>'+
-      '<path d="M'+px(.28)+','+(hatBrimY+hatH)+'Q'+px(.26)+','+hatBrimY+' '+W2+','+(hatBrimY-py(.02))+'Q'+px(.74)+','+hatBrimY+' '+px(.72)+','+(hatBrimY+hatH)+'" fill="'+robeCol+'" stroke="'+suitCol+'" stroke-width=".5"/>'+
-      '<rect x="'+px(.27)+'" y="'+(hatBrimY+hatH-py(.018))+'" width="'+px(.46)+'" height="'+py(.018)+'" fill="'+goldCol+'"/>'+
-      '<path d="M'+px(.68)+','+(hatBrimY+hatH*.7)+'Q'+px(.85)+','+(hatBrimY-py(.05))+' '+px(.92)+','+(hatBrimY-py(.03))+'" stroke="'+robeHL+'" stroke-width="'+px(.024)+'" fill="none" stroke-linecap="round"/>'+
-      '<path d="M'+px(.7)+','+(hatBrimY+hatH*.6)+'Q'+px(.88)+','+(hatBrimY-py(.03))+' '+px(.92)+','+(hatBrimY-py(.03))+'" stroke="'+goldCol+'" stroke-width="'+px(.013)+'" fill="none" stroke-linecap="round"/>';
-    const ruff=
-      '<path d="M'+px(.28)+','+robeTop+'L'+px(.38)+','+(robeTop+py(.04))+'L'+W2+','+(robeTop+py(.06))+'L'+px(.62)+','+(robeTop+py(.04))+'L'+px(.72)+','+robeTop+'" fill="white" stroke="'+suitCol+'" stroke-width=".4" opacity=".9"/>';
-    const sword=
-      '<line x1="'+px(.7)+'" y1="'+(robeTop+py(.03))+'" x2="'+px(.72)+'" y2="'+(robeBot-py(.02))+'" stroke="#aaa" stroke-width="'+px(.022)+'"/>'+
-      '<rect x="'+px(.63)+'" y="'+(robeTop+py(.03))+'" width="'+px(.18)+'" height="'+py(.018)+'" rx="'+px(.01)+'" fill="'+goldCol+'"/>'+
-      '<rect x="'+px(.68)+'" y="'+(robeTop+py(.008))+'" width="'+px(.05)+'" height="'+py(.034)+'" rx="'+px(.01)+'" fill="'+goldCol+'"/>';
-    return hat+robeEl(robeTop,robeBot)+faceEl(W2,faceCY)+ruff+sword;
-  }
+  const ring=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringCol}" stroke-width="${W*0.032}"/>`+
+    `<circle cx="${cx}" cy="${cy}" r="${r*0.86}" fill="none" stroke="${ringCol}" stroke-width="${W*0.014}" stroke-dasharray="2,2" opacity=".6"/>`+
+    `<circle cx="${cx}" cy="${cy}" r="${r*0.82}" fill="${creamCol}"/>`;
 
-  let topFig="";
-  if(rank==="K") topFig=kingSVG();
-  else if(rank==="Q") topFig=queenSVG();
-  else topFig=jackSVG();
-
-  const uid2=rank+suit+(small?"s":"l");
-  const botFig='<g transform="rotate(180,'+W2+','+H2+')">'+topFig+'</g>';
-  const divLine='<line x1="'+px(.08)+'" y1="'+H2+'" x2="'+px(.92)+'" y2="'+H2+'" stroke="'+suitCol+'" stroke-width="'+px(.01)+'" opacity=".3"/>';
-
+  const clipId="medclip"+rank+suit+(small?"s":"l");
   return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:hidden;">'+
-    border+
-    '<clipPath id="tc'+uid2+'"><rect x="0" y="0" width="'+W+'" height="'+H2+'"/></clipPath>'+
-    '<g clip-path="url(#tc'+uid2+')">'+topFig+'</g>'+
-    '<clipPath id="bc'+uid2+'"><rect x="0" y="'+H2+'" width="'+W+'" height="'+H2+'"/></clipPath>'+
-    '<g clip-path="url(#bc'+uid2+')">'+botFig+'</g>'+
-    divLine+centPip+
+    ring+
+    '<clipPath id="'+clipId+'"><circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.82)+'"/></clipPath>'+
+    '<g clip-path="url(#'+clipId+')">'+motif+faceUnit()+shouldersUnit()+'</g>'+
   '</svg>';
 }
 // PIP_ROWS defined inside makeCardEl
 
 // ── STATE ──
 let myName="",myId="",roomCode="",roomRef=null,isHost=false;
-let gameState=null,selectedCard=null,blindOn=false,handSorted=false;
+let gameState=null,selectedCard=null,blindOn=false,handSorted=false,hasViewedHand=false;
 let unsubscribe=null,prevRound=null,prevPhase=null,botMode="none";
 let trickWinTimeout=null,botTickInterval=null;
 const shownRounds=new Set();
@@ -730,12 +721,11 @@ const PIP_ROWS={
 function makePips(rank,suit,small){
   const rows=PIP_ROWS[rank];
   if(!rows)return'';
-  const fs=small?"font-size:.65rem":"font-size:.82rem";
-  const gap=small?"gap:3px":"gap:5px";
-  const vgap=small?"gap:2px":"gap:3px";
+  const fs=small?"font-size:.9rem":"font-size:1.5rem";
+  const gap=small?"gap:4px":"gap:7px";
+  const vgap=small?"gap:2px":"gap:1px";
   const rowsHTML=rows.map(r=>{
-    const pips=r===1?suit:suit+" "+suit;
-    return `<div class="pip-row" style="${gap}">${r===2?`<span class="card-pip" style="${fs}">${suit}</span><span class="card-pip" style="${fs}">${suit}</span>`:`<span class="card-pip" style="${fs}">${suit}</span>`}</div>`;
+    return `<div class="pip-row" style="${gap}">${r[0]===2?`<span class="card-pip" style="${fs}">${suit}</span><span class="card-pip" style="${fs}">${suit}</span>`:`<span class="card-pip" style="${fs}">${suit}</span>`}</div>`;
   }).join("");
   return`<div class="card-center-pips" style="${vgap}">${rowsHTML}</div>`;
 }
@@ -751,8 +741,10 @@ function makeCardEl(cid,opts={}){
   el.className=`${sz} card-${isRed?"red":"black"}${isTrump?" card-trump":""}${selected?" selected":""}${disabled?" disabled":""}`;
 
   if(faceDown){
-    el.style.cssText="background:linear-gradient(135deg,#1a237e,#283593);display:flex;align-items:center;justify-content:center;";
-    el.innerHTML=`<span style="font-size:${small?"1.4":"1.8"}rem;opacity:.4">🃏</span>`;
+    el.style.cssText="background:var(--maroon2);border:1.5px solid var(--antiquegold2);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;";
+    const ringSz=small?"28px":"42px";
+    el.innerHTML=`<div style="position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,rgba(201,150,44,.16) 0px,rgba(201,150,44,.16) 1.5px,transparent 1.5px,transparent 8px);"></div>
+      <div style="width:${ringSz};height:${ringSz};border-radius:50%;border:2px solid var(--antiquegold2);display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.15);font-family:'Cinzel',serif;color:var(--antiquegold2);font-weight:700;font-size:${small?'.85rem':'1.2rem'};position:relative;">घ</div>`;
     return el;
   }
 
@@ -764,9 +756,9 @@ function makeCardEl(cid,opts={}){
     // Classic playing card face — SVG figure
     centerHTML=makeFaceSVG(c.rank,s,isRed,small);
   } else if(c.rank==="A"){
-    // Ace: large centred suit
-    const fs=small?"2rem":"2.8rem";
-    centerHTML=`<span class="card-face-art" style="font-size:${fs};color:${col};">${s}</span>`;
+    // Ace: large centred suit in ornamental ring
+    const fs=small?"2.2rem":"3.1rem";
+    centerHTML=`<div class="ace-medallion ${small?'ace-medallion-sm':''}"><span class="card-face-art" style="font-size:${fs};color:${col};">${s}</span></div>`;
   } else {
     centerHTML=makePips(c.rank,s,small);
   }
@@ -923,12 +915,15 @@ function listenRoom(){
     }else if(state.phase==="playing"){
       if(prevPhase!=="playing"&&!dealShown){
         dealShown=true;
+        hasViewedHand=false;
+        blindOn=false;
         showDealAnimation(()=>{
           showScreen("game");
           renderGame(state);
           // Auto-switch to Declare tab so players declare immediately
           switchTab("declare");
           toast("📋 Declare your Sar/Hath before playing!");
+          playTrumpFlourish();
         });
       }else{
         showScreen("game");
@@ -953,9 +948,17 @@ function listenRoom(){
       // Reset prevTrickWinner on new round; show deal animation for new round
       if(prevRound!==null&&state.round!==prevRound){
         prevTrickWinner=null;
+        hasViewedHand=false;
+        blindOn=false;
         if(state.round>1){
           setTimeout(()=>{
-            showDealAnimation(()=>{renderGame(state);});
+            showDealAnimation(()=>{
+              renderGame(state);
+              // Auto-switch to Declare tab so players can't peek at Play tab before declaring
+              switchTab("declare");
+              toast("📋 Declare your Sar/Hath before playing!");
+              playTrumpFlourish();
+            });
           },2600); // after round result modal delay
         }
       }
@@ -963,6 +966,8 @@ function listenRoom(){
       scheduleBotTick(state);
       // Start chat listener
       listenChat();
+      // Start reactions listener
+      listenReactions();
     }else if(state.phase==="done"){
       showWinner(state);
     }
@@ -1103,6 +1108,7 @@ window.hostStartGame=async function(){
     currentTrick:{cards:{placeholder:null},leader:reps[0],turn:reps[0]},
     teamTricks:{"0":0,"1":0,"2":0,"3":0},
     roundHistory:[],lastTrickCards:null,lastTrickWinner:null,
+    trickHistory:[],lastRoundTrickHistory:[],
   });
 };
 
@@ -1187,6 +1193,36 @@ function renderTableArea(state){
     wrap.appendChild(cardEl);wrap.appendChild(nameEl);
     trickCon.appendChild(wrap);
   });
+  renderLiveTrickHud(state,trick,cards,players);
+}
+
+// ── LIVE TRICK HUD ── shows who is currently winning the trick while it's still in progress.
+// Read-only: reuses the existing resolveTrick/beats functions on the partial set of cards
+// played so far. Does not write to Firebase or alter any game logic/rules.
+function renderLiveTrickHud(state,trick,cards,players){
+  const hud=document.getElementById("live-trick-hud");
+  if(!hud)return;
+  const playedEntries=Object.entries(cards).filter(([pid,cid])=>cid&&pid!=="placeholder");
+  // Need at least 2 cards on the table for "currently winning" to be meaningful,
+  // and the leader's own card must be among them (resolveTrick needs it to find the led suit)
+  if(playedEntries.length<2||!trick.leader||!cards[trick.leader]||cards[trick.leader]==="placeholder"){
+    hud.style.display="none";
+    hud.innerHTML="";
+    return;
+  }
+  const partialCards={};
+  playedEntries.forEach(([pid,cid])=>{partialCards[pid]=cid;});
+  const trump=getHukumSuit();
+  const leadingPid=resolveTrick(partialCards,trick.leader,trump);
+  const leadingCard=partialCards[leadingPid];
+  if(!leadingCard){hud.style.display="none";hud.innerHTML="";return;}
+  const pname=players[leadingPid]?.name||"?";
+  const isMe=leadingPid===myId;
+  hud.style.display="flex";
+  hud.innerHTML=`<div class="trick-hud-pill">
+      <span class="trick-hud-dot"></span>
+      <span>Currently winning: <span class="trick-hud-name">${isMe?"You":pname}</span> with ${leadingCard}</span>
+    </div>`;
 }
 
 // ── CARDS PLAYED STRIP (all cards played in current trick, visible to all) ──
@@ -1222,6 +1258,19 @@ function renderHand(cards,state){
   const con=document.getElementById("my-hand-cards");
   con.innerHTML="";
   if(!cards.length){return;}
+  if(!hasViewedHand){
+    // Cards not yet viewed this round — show face-down placeholders only.
+    // This prevents seeing ranks/suits via the DOM before committing to (or against) a blind declaration.
+    cards.forEach(()=>{
+      // Always pass the same dummy id ("2♠") — never the real cid — so no rank/suit/trump
+      // info leaks via the element's class attribute (card-red/card-black/card-trump) in devtools.
+      const el=makeCardEl("2♠",{faceDown:true});
+      el.style.cursor="default";
+      con.appendChild(el);
+    });
+    document.getElementById("btn-play-card").disabled=true;
+    return;
+  }
   const trump=getHukumSuit();
   const trick=state.currentTrick||{};
   state.turnOrder=normArr(state.turnOrder);
@@ -1248,6 +1297,13 @@ function renderHand(cards,state){
     const p=parseCard(id);
     return p.suit===ledSuit && RANKS.indexOf(p.rank)>highestPlayedRank;
   }):false;
+  // Has anyone already played trump in this trick? If so, the "must play higher of led suit"
+  // obligation no longer applies — once trump has taken over the trick, later players following
+  // suit may play any card of that suit, not necessarily a higher one.
+  const trumpAlreadyPlayed=ledSuit&&ledSuit!=="♠"?Object.values(trickCards).some(tc=>{
+    if(!tc||tc==="placeholder")return false;
+    return parseCard(tc).suit==="♠";
+  }):false;
 
   display.forEach(cid=>{
     const c=parseCard(cid);
@@ -1258,8 +1314,9 @@ function renderHand(cards,state){
         if(c.suit==="♠"&&ledSuit!=="♠"){disabled=true;}
         // Must follow suit
         else if(c.suit!==ledSuit){disabled=true;}
-        // Rule 2: If I have a higher card, I cannot play a lower card of same suit
-        else if(hasHigherLed && RANKS.indexOf(c.rank)<=highestPlayedRank){disabled=true;}
+        // Rule 2: If I have a higher card, I cannot play a lower card of same suit —
+        // unless trump has already been played in this trick, which lifts this obligation.
+        else if(!trumpAlreadyPlayed && hasHigherLed && RANKS.indexOf(c.rank)<=highestPlayedRank){disabled=true;}
       }
       // If void of led suit: can play anything (trump or any other suit)
     }
@@ -1375,7 +1432,8 @@ async function doPlayCard(pid,cardToPlay,state){
       toast("Must follow suit! You have "+ledSuit+" cards.",true);
       return;
     }
-    // Rule 2: Must play higher card if available
+    // Rule 2: Must play higher card if available — unless trump has already been played
+    // in this trick, which lifts the "must play higher" obligation for later players.
     if(origHasLed&&playedC.suit===ledSuit){
       // Find highest played so far in this trick for led suit
       let highestIdx=-1;
@@ -1387,11 +1445,15 @@ async function doPlayCard(pid,cardToPlay,state){
           if(ri>highestIdx)highestIdx=ri;
         }
       });
+      const trumpAlreadyPlayedNow=ledSuit!=="♠"?Object.values(trickCardsNow).some(tc=>{
+        if(!tc||tc==="placeholder")return false;
+        return parseCard(tc).suit==="♠";
+      }):false;
       const hasHigher=origHand.some(id=>{
         const p=parseCard(id);
         return p.suit===ledSuit&&RANKS.indexOf(p.rank)>highestIdx;
       });
-      if(hasHigher&&RANKS.indexOf(playedC.rank)<=highestIdx){
+      if(!trumpAlreadyPlayedNow&&hasHigher&&RANKS.indexOf(playedC.rank)<=highestIdx){
         toast("You must play a higher "+ledSuit+" card!",true);
         return;
       }
@@ -1428,6 +1490,12 @@ async function doPlayCard(pid,cardToPlay,state){
     // Save last trick for visibility
     updates[`rooms/${roomCode}/lastTrickCards`]=trickCards;
     updates[`rooms/${roomCode}/lastTrickWinner`]=winner;
+    // Append this completed trick to trickHistory for the Replay Viewer.
+    // Purely additive — does not change scoring, turn order, or any existing field.
+    const trickHist=[...(state.trickHistory||[]),{
+      cards:trickCards,leader:trick.leader,winner,trickNum:(state.trickHistory||[]).length+1
+    }];
+    updates[`rooms/${roomCode}/trickHistory`]=trickHist;
 
     if(total>=13){
       const rr=computeRound(state,teamTricks);
@@ -1438,6 +1506,11 @@ async function doPlayCard(pid,cardToPlay,state){
       updates[`rooms/${roomCode}/roundResult`]=rr;
       updates[`rooms/${roomCode}/declarations`]={};
       updates[`rooms/${roomCode}/teamTricks`]={"0":0,"1":0,"2":0,"3":0};
+      // Keep this round's trickHistory visible for replay until the next round's first
+      // card is played, at which point we snapshot it as lastRoundTrickHistory and clear
+      // trickHistory for the new round.
+      updates[`rooms/${roomCode}/lastRoundTrickHistory`]=trickHist;
+      updates[`rooms/${roomCode}/trickHistory`]=[];
       const nextRound=(state.round||1)+1;
       if(nextRound>(state.maxRounds||13)){
         updates[`rooms/${roomCode}/phase`]="done";
@@ -1506,14 +1579,25 @@ async function runBotTurn(botPid,state){
         const tp=parseCard(tc);
         if(tp.suit===ledSuit){const ri=RANKS.indexOf(tp.rank);if(ri>highestIdx)highestIdx=ri;}
       });
-      // Must play higher if possible (Rule 2)
-      const higher=suited.filter(c=>RANKS.indexOf(parseCard(c).rank)>highestIdx);
-      if(higher.length){
-        // Play lowest of the higher cards (conservative win)
-        card=higher[0];
+      // If trump has already been played in this trick, the trick is already being won by
+      // trump — no obligation (or strategic point) to play a higher led-suit card, so the
+      // bot conserves its strong cards and plays its lowest led-suit card instead.
+      const trumpAlreadyPlayedBot=ledSuit!=="♠"?Object.values(trickCardsNow).some(tc=>{
+        if(!tc||tc==="placeholder")return false;
+        return parseCard(tc).suit==="♠";
+      }):false;
+      if(trumpAlreadyPlayedBot){
+        card=suited.slice().sort((a,b)=>RANKS.indexOf(parseCard(a).rank)-RANKS.indexOf(parseCard(b).rank))[0];
       }else{
-        // No higher card — must still play led suit, play lowest
-        card=suited[0];
+        // Must play higher if possible (Rule 2)
+        const higher=suited.filter(c=>RANKS.indexOf(parseCard(c).rank)>highestIdx);
+        if(higher.length){
+          // Play lowest of the higher cards (conservative win)
+          card=higher.slice().sort((a,b)=>RANKS.indexOf(parseCard(a).rank)-RANKS.indexOf(parseCard(b).rank))[0];
+        }else{
+          // No higher card — must still play led suit, play lowest
+          card=suited.slice().sort((a,b)=>RANKS.indexOf(parseCard(a).rank)-RANKS.indexOf(parseCard(b).rank))[0];
+        }
       }
     }else{
       // Void in led suit — Rule 3: can only play trump if truly void
@@ -1717,7 +1801,22 @@ function renderDeclareTab(state){
   const myTeamDeclared=myTeamPids.some(pid=>decls[pid]);
   document.getElementById("my-declare-section").style.display=(!myTeamDeclared)?"block":"none";
 }
+// ── TRUMP FLOURISH ── one-time ceremonial animation on the trump bar at the start of
+// each round (trump is fixed to Spades in this game's rules; this purely visual flourish
+// does not introduce or change any trump-selection logic).
+function playTrumpFlourish(){
+  const bar=document.getElementById("hukum-bar");
+  if(!bar)return;
+  bar.classList.remove("flourish-play");
+  void bar.offsetWidth; // restart animation if triggered again
+  bar.classList.add("flourish-play");
+}
+
 window.toggleBlind=function(){
+  if(!blindOn&&hasViewedHand){
+    toast("Blind not allowed — you've already seen your cards!",true);
+    return;
+  }
   blindOn=!blindOn;
   document.getElementById("blind-track").classList.toggle("on",blindOn);
   const inp=document.getElementById("declare-input");
@@ -1825,12 +1924,78 @@ window.showFinalScores=function(){
   }).join("");
   document.getElementById("full-scores-modal").classList.add("show");
 };
+
+// ── REPLAY VIEWER ── Read-only step-through of completed tricks for the current
+// (or just-finished) round. Reads trickHistory/lastRoundTrickHistory from Firebase;
+// never writes anything, so it cannot affect game state, scoring, or turn order.
+let replayList=[];
+let replayIdx=0;
+
+window.openReplay=function(){
+  const state=gameState;if(!state)return;
+  // Prefer the just-finished round's tricks if available; otherwise fall back to
+  // the current (possibly in-progress) round's trick history.
+  const lastRound=state.lastRoundTrickHistory||[];
+  const current=state.trickHistory||[];
+  replayList=lastRound.length?lastRound:current;
+  if(!replayList.length){
+    toast("No completed tricks to replay yet!",true);
+    return;
+  }
+  replayIdx=replayList.length-1; // start at most recent trick
+  document.getElementById("replay-modal").classList.add("show");
+  renderReplayTrick();
+};
+
+window.closeReplay=function(){
+  document.getElementById("replay-modal").classList.remove("show");
+};
+
+window.replayStep=function(dir){
+  const next=replayIdx+dir;
+  if(next<0||next>=replayList.length)return;
+  replayIdx=next;
+  renderReplayTrick();
+};
+
+function renderReplayTrick(){
+  const state=gameState;if(!state)return;
+  const trick=replayList[replayIdx];
+  if(!trick)return;
+  const players=state.players||{};
+  document.getElementById("replay-trick-num").textContent=trick.trickNum||(replayIdx+1);
+  document.getElementById("replay-trick-total").textContent=replayList.length;
+  const area=document.getElementById("replay-cards-area");
+  area.innerHTML="";
+  Object.entries(trick.cards||{}).forEach(([pid,cid])=>{
+    if(!cid||pid==="placeholder")return;
+    const wrap=document.createElement("div");wrap.className="trick-card-wrap";
+    const isWinner=pid===trick.winner;
+    const cardEl=makeCardEl(cid,{small:true});
+    cardEl.style.cursor="default";
+    if(isWinner)cardEl.classList.add("card-trump"); // reuse gold-glow style to highlight the winning card
+    const pname=players[pid]?.name||"?";
+    const nameEl=document.createElement("div");
+    nameEl.className=isWinner?"trick-winner-label":"player-name-small";
+    nameEl.textContent=isWinner?("👑 "+pname):pname;
+    wrap.appendChild(cardEl);wrap.appendChild(nameEl);
+    area.appendChild(wrap);
+  });
+  const leaderName=players[trick.leader]?.name||"?";
+  const winnerName=players[trick.winner]?.name||"?";
+  document.getElementById("replay-meta").textContent=`Led by ${leaderName} · Won by ${winnerName}`;
+  const pct=replayList.length>1?Math.round(((replayIdx+1)/replayList.length)*100):100;
+  document.getElementById("replay-progress-bar").style.width=pct+"%";
+  document.getElementById("replay-prev-btn").disabled=replayIdx<=0;
+  document.getElementById("replay-next-btn").disabled=replayIdx>=replayList.length-1;
+}
 window.newGame=function(){
   if(!isHost){toast("Only host can start new game!",true);return;}
   update(roomRef,{phase:"waiting",round:0,hukum:"S",hands:{},declarations:{},
     currentTrick:null,roundHistory:[],roundResult:null,lastTrickCards:null,lastTrickWinner:null,
     teamTricks:{"0":0,"1":0,"2":0,"3":0},
-    teams:DEFAULT_TEAM_NAMES.map(n=>({name:n,score:0}))
+    teams:DEFAULT_TEAM_NAMES.map(n=>({name:n,score:0})),
+    trickHistory:[],lastRoundTrickHistory:[],
   });
 };
 
@@ -1842,6 +2007,21 @@ window.switchTab=function(tab){
     el.style.display=t===tab?(t==="play"?"flex":"block"):"none";
     if(t==="play"&&t===tab)el.style.flexDirection="column";
   });
+  if(tab==="play"&&!hasViewedHand){
+    hasViewedHand=true;
+    // Player has now seen their cards — blind declaration is no longer allowed
+    if(blindOn){
+      blindOn=false;
+      const track=document.getElementById("blind-track");
+      if(track)track.classList.remove("on");
+      const inp=document.getElementById("declare-input");
+      if(inp)inp.min=2;
+      toast("Blind disabled — you've seen your cards!",true);
+    }
+    // Re-render immediately so the real cards replace the face-down placeholders
+    // right away, instead of waiting for the next Firebase snapshot.
+    if(gameState)renderHand(gameState.hands?.[myId]||[],gameState);
+  }
 };
 window.sortHand=function(){
   handSorted=!handSorted;
@@ -1944,6 +2124,57 @@ function listenChat(){
 function escHtml(t){
   return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
+
+// ── QUICK REACTIONS ── tap-to-send floating emoji, visible to everyone in the room.
+// Writes to a separate Firebase path from chat/game state — purely additive, doesn't
+// touch trick/turn/score logic at all.
+let reactionListener=null;
+let lastReactionTs=Date.now(); // only show reactions sent after we joined this render session
+
+window.toggleReactionPicker=function(){
+  const picker=document.getElementById("reaction-picker");
+  if(!picker)return;
+  picker.style.display=picker.style.display==="none"?"flex":"none";
+};
+
+window.sendReaction=async function(emoji){
+  const picker=document.getElementById("reaction-picker");
+  if(picker)picker.style.display="none";
+  const ts=Date.now();
+  const reactRef=ref(db,`rooms/${roomCode}/reactions/${ts}_${myId.slice(-4)}`);
+  await set(reactRef,{pid:myId,name:myName,emoji,ts});
+};
+
+function listenReactions(){
+  if(reactionListener)return;
+  const reactRef=ref(db,`rooms/${roomCode}/reactions`);
+  reactionListener=onValue(reactRef,snap=>{
+    if(!snap.exists())return;
+    const overlay=document.getElementById("reaction-overlay");
+    if(!overlay)return;
+    const entries=Object.values(snap.val()||{});
+    entries.forEach(r=>{
+      if(r.ts<=lastReactionTs)return; // already shown (or sent before we started listening)
+      const span=document.createElement("span");
+      span.className="floating-reaction";
+      span.textContent=r.emoji;
+      span.style.left=(30+Math.random()*40)+"%";
+      span.style.bottom="10px";
+      overlay.appendChild(span);
+      setTimeout(()=>span.remove(),1600);
+    });
+    lastReactionTs=Math.max(...entries.map(e=>e.ts),lastReactionTs);
+  });
+}
+
+// Close the reaction picker if the player taps/clicks elsewhere on the page
+document.addEventListener("click",e=>{
+  const picker=document.getElementById("reaction-picker");
+  const btn=document.getElementById("btn-react");
+  if(!picker||picker.style.display==="none")return;
+  if(picker.contains(e.target)||btn?.contains(e.target))return;
+  picker.style.display="none";
+});
 
 // Start chat listener once game starts
 const _origListenRoom=listenRoom;
