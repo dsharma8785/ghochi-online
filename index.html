@@ -141,9 +141,9 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .trick-card-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trick-winner-label{font-size:.6rem;color:var(--gold);font-weight:800;text-align:center;}
-.card-sm{width:48px;height:70px;border-radius:6px;padding:4px 4px;}
-.card-sm .card-rank{font-size:.8rem;}
-.card-sm .card-suit-sm{font-size:.6rem;}
+.card-sm{width:50px;height:82px;border-radius:6px;padding:3px 3px;}
+.card-sm .card-rank{font-size:.62rem;}
+.card-sm .card-suit-sm{font-size:.48rem;margin-top:0;}
 .card-sm .card-face-art{font-size:1.1rem;}
 .card-sm .pip-row{gap:4px;}
 .ace-medallion{width:78%;height:78%;border-radius:50%;border:2px solid var(--antiquegold2);display:flex;align-items:center;justify-content:center;position:relative;}
@@ -551,47 +551,62 @@ const DEFAULT_TEAM_NAMES=["Team Maroon","Team Indigo","Team Emerald","Team Gold"
 const RANKS=["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
 const ALL_SUITS=["♠","♥","♦","♣"];
 const RED_SUITS=["♥","♦"];
-const FACE_RANKS=["J","Q","K","A"];
-// ── FACE CARD SVG ART ── Ganjifa Royal medallion-style court portraits
+const FACE_RANKS=["J","Q","K","A"]; // NOTE: "A" is intentionally included — the redeal rule
+// (handQualifiesRedeal, renderRedealBanner/Modal below) checks for "no Spades AND no face
+// cards (J/Q/K/A)" as written. Do not remove "A" from this list — see makeCardEl for the
+// separate (purely visual) handling that keeps Aces out of the court-card SVG art.
+// ── FACE CARD SVG ART ── Ganjifa Royal medallion-style ornamental court art.
+// Deliberately non-figurative: no human face/eyes/features — just the suit symbol
+// framed by a rank-specific ornamental motif (crown / lotus-tiara / banner), in
+// keeping with the stylised, iconographic look of traditional Ganjifa decks.
 function makeFaceSVG(rank,suit,isRed,small){
-  const goldCol="#9c6f0e",ringCol="#9c6f0e",creamCol="#fbf3df",skinCol="#e8b07a";
-  const robeCol=isRed?"#9c1f1f":"#1a1a4a";
-  const robeDark=isRed?"#6e1414":"#10102e";
-  const hairCol="#2a1810";
+  const goldCol="#9c6f0e",ringCol="#9c6f0e",creamCol="#fbf3df";
+  const accentCol=isRed?"#9c1f1f":"#1a1a4a";
   const W=small?40:62, H=small?40:62;
   const cx=W/2, cy=H/2;
   const r=W*0.46;
+  const clipR=r*0.82; // visible (unclipped) radius — all motif geometry must stay within this
 
-  function faceUnit(){
-    return(
-      `<ellipse cx="${cx}" cy="${cy+H*0.05}" rx="${W*0.17}" ry="${H*0.2}" fill="${skinCol}"/>`+
-      `<path d="M${cx-W*0.16},${cy-H*0.02} Q${cx},${cy-H*0.13} ${cx+W*0.16},${cy-H*0.02}" fill="none" stroke="${hairCol}" stroke-width="${W*0.035}"/>`+
-      `<circle cx="${cx-W*0.07}" cy="${cy+H*0.02}" r="${W*0.02}" fill="${hairCol}"/>`+
-      `<circle cx="${cx+W*0.07}" cy="${cy+H*0.02}" r="${W*0.02}" fill="${hairCol}"/>`+
-      `<path d="M${cx-W*0.05},${cy+H*0.16} Q${cx},${cy+H*0.2} ${cx+W*0.05},${cy+H*0.16}" fill="none" stroke="${robeDark}" stroke-width="${W*0.025}"/>`
-    );
-  }
-
-  function shouldersUnit(){
-    return(
-      `<path d="M${cx-W*0.34},${cy+H*0.46} Q${cx},${cy+H*0.3} ${cx+W*0.34},${cy+H*0.46} L${cx+W*0.34},${cy+H*0.52} L${cx-W*0.34},${cy+H*0.52} Z" fill="${robeCol}" stroke="${robeDark}" stroke-width="0.6"/>`+
-      `<path d="M${cx-W*0.13},${cy+H*0.46} L${cx},${cy+H*0.5} L${cx+W*0.13},${cy+H*0.46}" fill="none" stroke="${goldCol}" stroke-width="${W*0.022}"/>`
-    );
+  function suitGlyph(){
+    const fs=W*0.3;
+    return `<text x="${cx}" y="${cy+H*0.05}" font-size="${fs}" text-anchor="middle" dominant-baseline="middle" fill="${accentCol}" font-family="serif" font-weight="bold">${suit}</text>`;
   }
 
   function kingMotif(){
-    return `<path d="M${cx-W*0.18},${cy-H*0.32} L${cx-W*0.15},${cy-H*0.43} L${cx-W*0.07},${cy-H*0.36} L${cx},${cy-H*0.47} L${cx+W*0.07},${cy-H*0.36} L${cx+W*0.15},${cy-H*0.43} L${cx+W*0.18},${cy-H*0.32} Z" fill="${goldCol}" stroke="#6e4d09" stroke-width="0.5"/>`+
-      `<circle cx="${cx}" cy="${cy-H*0.47}" r="${W*0.025}" fill="${isRed?'#9c1f1f':'#1a1a4a'}"/>`;
+    // Bold five-point crown with jewel accents above; laurel sweep below — all points
+    // verified to stay within the visible clip circle (max radius ~0.36W from center).
+    const topY=cy-H*0.34, baseY=cy-H*0.17;
+    return `<path d="M${cx-W*0.18},${baseY} L${cx-W*0.16},${cy-H*0.27} L${cx-W*0.09},${cy-H*0.225} L${cx-W*0.045},${cy-H*0.31} L${cx},${topY} L${cx+W*0.045},${cy-H*0.31} L${cx+W*0.09},${cy-H*0.225} L${cx+W*0.16},${cy-H*0.27} L${cx+W*0.18},${baseY} Z" fill="${goldCol}" stroke="#6e4d09" stroke-width="0.9"/>`+
+      `<rect x="${cx-W*0.18}" y="${baseY-H*0.012}" width="${W*0.36}" height="${H*0.042}" fill="${goldCol}" stroke="#6e4d09" stroke-width="0.6"/>`+
+      `<circle cx="${cx}" cy="${topY}" r="${W*0.038}" fill="${accentCol}"/>`+
+      `<circle cx="${cx-W*0.09}" cy="${cy-H*0.225}" r="${W*0.02}" fill="${accentCol}"/>`+
+      `<circle cx="${cx+W*0.09}" cy="${cy-H*0.225}" r="${W*0.02}" fill="${accentCol}"/>`+
+      `<path d="M${cx-W*0.2},${cy+H*0.2} Q${cx-W*0.08},${cy+H*0.3} ${cx},${cy+H*0.23} Q${cx+W*0.08},${cy+H*0.3} ${cx+W*0.2},${cy+H*0.2}" fill="none" stroke="${goldCol}" stroke-width="${W*0.04}" stroke-linecap="round"/>`;
   }
   function queenMotif(){
-    return `<path d="M${cx-W*0.16},${cy-H*0.3} Q${cx},${cy-H*0.46} ${cx+W*0.16},${cy-H*0.3}" fill="none" stroke="${goldCol}" stroke-width="${W*0.032}"/>`+
-      `<circle cx="${cx}" cy="${cy-H*0.42}" r="${W*0.028}" fill="${isRed?'#9c1f1f':'#1a1a4a'}"/>`+
-      `<circle cx="${cx-W*0.12}" cy="${cy-H*0.27}" r="${W*0.018}" fill="${goldCol}"/>`+
-      `<circle cx="${cx+W*0.12}" cy="${cy-H*0.27}" r="${W*0.018}" fill="${goldCol}"/>`;
+    // Full lotus-petal tiara with central pendant above; floral garland below —
+    // all points verified to stay within the visible clip circle.
+    const baseY=cy-H*0.17;
+    return `<path d="M${cx-W*0.18},${baseY} Q${cx-W*0.165},${cy-H*0.25} ${cx-W*0.1},${cy-H*0.22} Q${cx-W*0.075},${cy-H*0.34} ${cx},${cy-H*0.22} Q${cx+W*0.075},${cy-H*0.34} ${cx+W*0.1},${cy-H*0.22} Q${cx+W*0.165},${cy-H*0.25} ${cx+W*0.18},${baseY}" fill="none" stroke="${goldCol}" stroke-width="${W*0.04}" stroke-linecap="round" stroke-linejoin="round"/>`+
+      `<circle cx="${cx}" cy="${cy-H*0.22}" r="${W*0.04}" fill="${accentCol}" stroke="${goldCol}" stroke-width="0.6"/>`+
+      `<circle cx="${cx-W*0.1}" cy="${cy-H*0.16}" r="${W*0.02}" fill="${goldCol}"/>`+
+      `<circle cx="${cx+W*0.1}" cy="${cy-H*0.16}" r="${W*0.02}" fill="${goldCol}"/>`+
+      `<circle cx="${cx-W*0.13}" cy="${cy+H*0.22}" r="${W*0.032}" fill="${goldCol}"/>`+
+      `<circle cx="${cx+W*0.13}" cy="${cy+H*0.22}" r="${W*0.032}" fill="${goldCol}"/>`+
+      `<circle cx="${cx}" cy="${cy+H*0.28}" r="${W*0.026}" fill="${accentCol}"/>`+
+      `<path d="M${cx-W*0.13},${cy+H*0.22} Q${cx},${cy+H*0.31} ${cx+W*0.13},${cy+H*0.22}" fill="none" stroke="${goldCol}" stroke-width="${W*0.022}"/>`;
   }
   function jackMotif(){
-    return `<path d="M${cx-W*0.17},${cy-H*0.27} Q${cx},${cy-H*0.4} ${cx+W*0.17},${cy-H*0.27} Q${cx+W*0.14},${cy-H*0.32} ${cx},${cy-H*0.34} Q${cx-W*0.14},${cy-H*0.32} ${cx-W*0.17},${cy-H*0.27} Z" fill="${robeCol}" stroke="${robeDark}" stroke-width="0.5"/>`+
-      `<circle cx="${cx}" cy="${cy-H*0.36}" r="${W*0.022}" fill="${goldCol}"/>`;
+    // Pennant/flag on a short staff above (clearly distinct silhouette from King's crown);
+    // single sash below — all points verified to stay within the visible clip circle.
+    const baseY=cy-H*0.17, topY=cy-H*0.34;
+    return `<line x1="${cx-W*0.02}" y1="${baseY}" x2="${cx-W*0.02}" y2="${topY}" stroke="${goldCol}" stroke-width="${W*0.032}" stroke-linecap="round"/>`+
+      `<path d="M${cx-W*0.02},${topY} L${cx+W*0.19},${cy-H*0.28} L${cx-W*0.02},${cy-H*0.21} Z" fill="${accentCol}" stroke="${goldCol}" stroke-width="0.7"/>`+
+      `<circle cx="${cx-W*0.02}" cy="${topY}" r="${W*0.028}" fill="${goldCol}"/>`+
+      `<circle cx="${cx-W*0.02}" cy="${baseY}" r="${W*0.026}" fill="${goldCol}"/>`+
+      `<path d="M${cx-W*0.17},${cy+H*0.22} Q${cx},${cy+H*0.29} ${cx+W*0.17},${cy+H*0.22}" fill="none" stroke="${goldCol}" stroke-width="${W*0.036}" stroke-linecap="round"/>`+
+      `<circle cx="${cx-W*0.17}" cy="${cy+H*0.22}" r="${W*0.022}" fill="${accentCol}"/>`+
+      `<circle cx="${cx+W*0.17}" cy="${cy+H*0.22}" r="${W*0.022}" fill="${accentCol}"/>`;
   }
 
   let motif="";
@@ -599,15 +614,15 @@ function makeFaceSVG(rank,suit,isRed,small){
   else if(rank==="Q") motif=queenMotif();
   else motif=jackMotif();
 
-  const ring=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringCol}" stroke-width="${W*0.032}"/>`+
-    `<circle cx="${cx}" cy="${cy}" r="${r*0.86}" fill="none" stroke="${ringCol}" stroke-width="${W*0.014}" stroke-dasharray="2,2" opacity=".6"/>`+
-    `<circle cx="${cx}" cy="${cy}" r="${r*0.82}" fill="${creamCol}"/>`;
+  const ring=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringCol}" stroke-width="${W*0.04}"/>`+
+    `<circle cx="${cx}" cy="${cy}" r="${r*0.86}" fill="none" stroke="${ringCol}" stroke-width="${W*0.016}" stroke-dasharray="2,2" opacity=".7"/>`+
+    `<circle cx="${cx}" cy="${cy}" r="${clipR}" fill="${creamCol}"/>`;
 
   const clipId="medclip"+rank+suit+(small?"s":"l");
   return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:hidden;">'+
     ring+
-    '<clipPath id="'+clipId+'"><circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.82)+'"/></clipPath>'+
-    '<g clip-path="url(#'+clipId+')">'+motif+faceUnit()+shouldersUnit()+'</g>'+
+    '<clipPath id="'+clipId+'"><circle cx="'+cx+'" cy="'+cy+'" r="'+clipR+'"/></clipPath>'+
+    '<g clip-path="url(#'+clipId+')">'+suitGlyph()+motif+'</g>'+
   '</svg>';
 }
 // PIP_ROWS defined inside makeCardEl
@@ -721,9 +736,19 @@ const PIP_ROWS={
 function makePips(rank,suit,small){
   const rows=PIP_ROWS[rank];
   if(!rows)return'';
-  const fs=small?"font-size:.9rem":"font-size:1.5rem";
-  const gap=small?"gap:4px":"gap:7px";
-  const vgap=small?"gap:2px":"gap:1px";
+  const rowCount=rows.length;
+  // Scale icon size DOWN as row count goes up, so 5-row cards (9, 10) never overflow
+  // the available card height. Sized so the full pip block (icons + gaps) reliably
+  // fits within the card's center area at both card sizes.
+  let fsRem;
+  if(small){
+    fsRem = rowCount<=2?0.95 : rowCount<=3?0.8 : rowCount===4?0.66 : 0.56;
+  }else{
+    fsRem = rowCount<=2?1.5 : rowCount<=3?1.25 : rowCount===4?1.0 : 0.82;
+  }
+  const fs=`font-size:${fsRem}rem`;
+  const gap=small?"gap:3px":"gap:5px";
+  const vgap=small?"gap:1px":"gap:1px";
   const rowsHTML=rows.map(r=>{
     return `<div class="pip-row" style="${gap}">${r[0]===2?`<span class="card-pip" style="${fs}">${suit}</span><span class="card-pip" style="${fs}">${suit}</span>`:`<span class="card-pip" style="${fs}">${suit}</span>`}</div>`;
   }).join("");
@@ -752,13 +777,15 @@ function makeCardEl(cid,opts={}){
   const col=isRed?"#cc1111":"#111122";
   let centerHTML="";
 
-  if(isFace){
-    // Classic playing card face — SVG figure
-    centerHTML=makeFaceSVG(c.rank,s,isRed,small);
-  } else if(c.rank==="A"){
-    // Ace: large centred suit in ornamental ring
+  if(c.rank==="A"){
+    // Ace: large centred suit symbol in an ornamental ring — no figure/face art.
+    // This check must come BEFORE the isFace/court-card branch below, since FACE_RANKS
+    // intentionally includes "A" for the redeal-rule logic elsewhere in the file.
     const fs=small?"2.2rem":"3.1rem";
     centerHTML=`<div class="ace-medallion ${small?'ace-medallion-sm':''}"><span class="card-face-art" style="font-size:${fs};color:${col};">${s}</span></div>`;
+  } else if(isFace){
+    // Court card (J/Q/K) — Ganjifa-style ornamental medallion art
+    centerHTML=makeFaceSVG(c.rank,s,isRed,small);
   } else {
     centerHTML=makePips(c.rank,s,small);
   }
