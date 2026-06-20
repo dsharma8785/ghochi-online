@@ -272,7 +272,12 @@ input::placeholder{color:var(--muted);font-weight:600;}
           <button class="btn btn-blue btn-sm" id="bot-some-btn" onclick="setBotMode('some')" style="flex:1;">🤖 With Bots</button>
         </div>
         <div id="bot-solo-wrap" style="display:none;">
-          <button class="btn btn-ghost btn-sm btn-full" id="bot-solo-btn" onclick="startSoloGame()">🎮 Solo vs 3 Bots</button>
+          <button class="btn btn-ghost btn-sm btn-full" id="bot-solo-btn" onclick="startSoloGame()">🎮 Quick Start: Solo vs 3 Bots</button>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.5;">
+            Want fewer bots? Just use <strong>Create Room</strong> below with "With Bots" selected —
+            any empty team slot is automatically filled by a bot when the game starts. For example,
+            invite 1 friend and start: you + your friend + 2 bots. Invite 2 friends: you + 2 friends + 1 bot.
+          </div>
         </div>
       </div>
     </div>
@@ -859,6 +864,8 @@ function listenRoom(){
           },2600); // after round result modal delay
         }
       }
+      // Bot declarations (Sar/Hath) — must happen before bots can play tricks
+      scheduleBotDeclare(state);
       // Bot tick
       scheduleBotTick(state);
       // Start chat listener
@@ -1440,6 +1447,42 @@ async function doPlayCard(pid,cardToPlay,state){
 }
 
 // ── BOT LOGIC ──
+// ── BOT DECLARATIONS (Sar/Hath) ── Bots must declare before the round can begin, since
+// allTeamsDeclared() requires at least one declaration per team. Without this, any room
+// with bot-only teams would wait forever for a declaration that never arrives.
+let botTickInterval2=null;
+function scheduleBotDeclare(state){
+  if(!state)return;
+  if(!isHost)return; // only the host submits bot declarations, to avoid duplicate writes
+  if(allTeamsDeclared(state))return;
+  const players=state.players||{};
+  const decls=state.declarations||{};
+  // Find the first bot, in any team that hasn't declared yet, who hasn't declared itself.
+  const pendingBot=Object.entries(players).find(([pid,p])=>p.isBot&&!decls[pid]);
+  if(!pendingBot)return;
+  const[botId]=pendingBot;
+  if(botTickInterval2)clearTimeout(botTickInterval2);
+  botTickInterval2=setTimeout(()=>runBotDeclare(botId,state),700);
+}
+
+async function runBotDeclare(botId,state){
+  const snap=await get(roomRef);
+  if(!snap.exists())return;
+  const freshState=snap.val();
+  const decls=freshState.declarations||{};
+  if(decls[botId])return; // already declared (e.g. another tick beat us to it)
+  const hand=normArr(freshState.hands?.[botId]);
+  if(!hand.length)return;
+  // Simple heuristic: count trump cards and face cards as "strength," translate that
+  // into a modest, sane declaration. Not a sophisticated bidder — just enough to let
+  // the round start and proceed with a plausible number (never blind, to keep it simple).
+  const trumpCount=hand.filter(c=>parseCard(c).suit==="♠").length;
+  const faceCount=hand.filter(c=>FACE_RANKS.includes(parseCard(c).rank)&&parseCard(c).rank!=="A").length;
+  let amount=2+trumpCount+Math.floor(faceCount/2);
+  amount=Math.max(2,Math.min(13,amount));
+  await update(ref(db,`rooms/${roomCode}/declarations`),{[botId]:{amount,blind:false}});
+}
+
 function scheduleBotTick(state){
   if(!state)return;
   const trick=state.currentTrick||{};
