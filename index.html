@@ -805,6 +805,9 @@ function listenRoom(){
     if(bar)bar.classList.toggle("show",!snap.val());
   });
   let prevTrickWinner=null;
+  let prevTrickHistoryLen=0; // tracks trickHistory.length so the win overlay fires on EVERY
+                              // completed trick, not just when the winner differs from last time
+                              // (the old check missed consecutive wins by the same player)
   let dealShown=false;
   unsubscribe=onValue(roomRef,snap=>{
     if(!snap.exists())return;
@@ -819,6 +822,7 @@ function listenRoom(){
         dealShown=true;
         hasViewedHand=false;
         blindOn=false;
+        prevTrickHistoryLen=(state.trickHistory||[]).length;
         showDealAnimation(()=>{
           showScreen("game");
           renderGame(state);
@@ -829,10 +833,15 @@ function listenRoom(){
         });
       }else{
         showScreen("game");
-        // Trick win overlay: fire for ALL players when winner changes
+        // Trick win overlay: fire for ALL players every time a NEW trick has completed —
+        // detected via trickHistory.length increasing, which is reliable even when the
+        // same player wins multiple tricks in a row (winner-identity alone isn't enough).
         const newWinner=state.lastTrickWinner;
         const newWinCards=state.lastTrickCards;
-        if(newWinner&&newWinner!==prevTrickWinner&&newWinCards){
+        const curHistLen=(state.trickHistory||[]).length;
+        const isNewTrick=curHistLen>prevTrickHistoryLen;
+        if(newWinner&&isNewTrick&&newWinCards){
+          prevTrickHistoryLen=curHistLen;
           showTrickWinOverlay(newWinner,newWinCards,state,()=>{
             renderGame(state);
           });
@@ -845,11 +854,12 @@ function listenRoom(){
       if(prevRound!==null&&state.round!==prevRound&&state.roundResult&&!shownRounds.has(state.round)){
         shownRounds.add(state.round);
         // Delay round result until trick overlay clears
-        setTimeout(()=>showRoundResult(state),blockPlay?2400:0);
+        setTimeout(()=>showRoundResult(state),blockPlay?3200:0);
       }
-      // Reset prevTrickWinner on new round; show deal animation for new round
+      // Reset prevTrickWinner/prevTrickHistoryLen on new round; show deal animation for new round
       if(prevRound!==null&&state.round!==prevRound){
         prevTrickWinner=null;
+        prevTrickHistoryLen=0;
         hasViewedHand=false;
         blindOn=false;
         if(state.round>1){
@@ -1209,6 +1219,25 @@ function renderHand(cards,state){
     if(!tc||tc==="placeholder")return false;
     return parseCard(tc).suit==="♠";
   }):false;
+  // RULE (void of led suit): if I have no card of the led suit, I must play trump if I hold
+  // any — UNLESS someone has already played a trump higher than every trump in my hand, in
+  // which case my trump couldn't win/improve the trick anyway and I may discard freely.
+  let highestTrumpPlayed=-1;
+  if(ledSuit&&ledSuit!=="♠"){
+    Object.values(trickCards).forEach(tc=>{
+      if(!tc||tc==="placeholder")return;
+      const tc_=parseCard(tc);
+      if(tc_.suit==="♠"){
+        const ri=RANKS.indexOf(tc_.rank);
+        if(ri>highestTrumpPlayed)highestTrumpPlayed=ri;
+      }
+    });
+  }
+  const myTrumps=ledSuit&&ledSuit!=="♠"&&!hasLedSuit?cards.filter(id=>parseCard(id).suit==="♠"):[];
+  const hasHigherTrump=myTrumps.some(id=>RANKS.indexOf(parseCard(id).rank)>highestTrumpPlayed);
+  // Must-play-trump applies only if I'm void of led suit, I hold trump, AND (no trump has
+  // been played yet, OR I hold a trump higher than the best one played so far).
+  const mustPlayTrump=myTrumps.length>0 && (highestTrumpPlayed===-1 || hasHigherTrump);
 
   display.forEach(cid=>{
     const c=parseCard(cid);
@@ -1222,8 +1251,12 @@ function renderHand(cards,state){
         // Rule 2: If I have a higher card, I cannot play a lower card of same suit —
         // unless trump has already been played in this trick, which lifts this obligation.
         else if(!trumpAlreadyPlayed && hasHigherLed && RANKS.indexOf(c.rank)<=highestPlayedRank){disabled=true;}
+      } else if(mustPlayTrump && c.suit!=="♠"){
+        // Void of led suit, holding a trump that can still beat the best trump played
+        // so far (or no trump played yet) — must play trump, cannot discard.
+        disabled=true;
       }
-      // If void of led suit: can play anything (trump or any other suit)
+      // If void of led suit AND no mandatory-trump obligation applies: can play anything
     }
     const isSelected=selectedCard===cid;
     const el=makeCardEl(cid,{disabled,selected:isSelected});
@@ -1294,7 +1327,7 @@ function showTrickWinOverlay(winnerPid,trickCards,state,cb){
     overlay.classList.remove("show");
     blockPlay=false;
     if(cb)cb();
-  },2200);
+  },3000);
 }
 
 // ── PLAY CARD ──
@@ -1360,6 +1393,26 @@ async function doPlayCard(pid,cardToPlay,state){
       });
       if(!trumpAlreadyPlayedNow&&hasHigher&&RANKS.indexOf(playedC.rank)<=highestIdx){
         toast("You must play a higher "+ledSuit+" card!",true);
+        return;
+      }
+    }
+    // RULE (void of led suit): must play trump if held, unless someone has already played
+    // a trump higher than every trump in hand (in which case any card may be discarded).
+    if(!origHasLed&&ledSuit!=="♠"){
+      let highestTrumpIdx=-1;
+      Object.values(trickCardsNow).forEach(tc=>{
+        if(!tc||tc==="placeholder")return;
+        const tp=parseCard(tc);
+        if(tp.suit==="♠"){
+          const ri=RANKS.indexOf(tp.rank);
+          if(ri>highestTrumpIdx)highestTrumpIdx=ri;
+        }
+      });
+      const myTrumps=origHand.filter(id=>parseCard(id).suit==="♠");
+      const hasHigherTrump=myTrumps.some(id=>RANKS.indexOf(parseCard(id).rank)>highestTrumpIdx);
+      const mustPlayTrump=myTrumps.length>0 && (highestTrumpIdx===-1 || hasHigherTrump);
+      if(mustPlayTrump&&playedC.suit!=="♠"){
+        toast("You must play Hukum (♠) — you have no "+ledSuit+" cards!",true);
         return;
       }
     }
@@ -1541,11 +1594,34 @@ async function runBotTurn(botPid,state){
         }
       }
     }else{
-      // Void in led suit — Rule 3: can only play trump if truly void
+      // Void in led suit. RULE: must play trump if held, unless someone has already played
+      // a trump higher than every trump the bot holds (then any card may be discarded).
       const trumpCards=hand.filter(c=>parseCard(c).suit==="♠");
       const nonTrump=hand.filter(c=>parseCard(c).suit!=="♠");
-      // Try trump to steal trick, else discard lowest
-      card=trumpCards.length?trumpCards[0]:nonTrump.length?nonTrump[0]:hand[0];
+      const sortAsc=arr=>arr.slice().sort((a,b)=>RANKS.indexOf(parseCard(a).rank)-RANKS.indexOf(parseCard(b).rank));
+      if(ledSuit!=="♠"&&trumpCards.length){
+        let highestTrumpIdx=-1;
+        Object.values(trickCardsNow).forEach(tc=>{
+          if(!tc||tc==="placeholder")return;
+          const tp=parseCard(tc);
+          if(tp.suit==="♠"){const ri=RANKS.indexOf(tp.rank);if(ri>highestTrumpIdx)highestTrumpIdx=ri;}
+        });
+        const higherTrumps=trumpCards.filter(c=>RANKS.indexOf(parseCard(c).rank)>highestTrumpIdx);
+        const mustPlayTrump=highestTrumpIdx===-1||higherTrumps.length>0;
+        if(mustPlayTrump){
+          // Must play trump — play the lowest trump that still beats the current best
+          // (or lowest trump overall if none has been played yet)
+          const pool=highestTrumpIdx===-1?trumpCards:higherTrumps;
+          card=sortAsc(pool)[0];
+        }else{
+          // No trump of mine can beat what's already been played — free to discard
+          card=nonTrump.length?sortAsc(nonTrump)[0]:sortAsc(trumpCards)[0];
+        }
+      }else{
+        // Led suit IS trump, or bot holds no trump at all — discard lowest non-trump,
+        // or lowest trump if that's all the bot has
+        card=nonTrump.length?sortAsc(nonTrump)[0]:sortAsc(trumpCards)[0];
+      }
     }
   }else{
     // Leading: play lowest non-trump
@@ -1874,11 +1950,14 @@ let replayIdx=0;
 
 window.openReplay=function(){
   const state=gameState;if(!state)return;
-  // Prefer the just-finished round's tricks if available; otherwise fall back to
-  // the current (possibly in-progress) round's trick history.
-  const lastRound=state.lastRoundTrickHistory||[];
+  // Prefer the CURRENT round's trick history (tricks played so far this round) — this is
+  // the actual fix for the bug where a stale previous round's (or previous game's) replay
+  // data was shown instead of the round actually being played right now.
+  // Only fall back to lastRoundTrickHistory (the round that just finished) in the brief
+  // window right after a round ends, before the new round's first trick has been played yet.
   const current=state.trickHistory||[];
-  replayList=lastRound.length?lastRound:current;
+  const lastRound=state.lastRoundTrickHistory||[];
+  replayList=current.length?current:lastRound;
   if(!replayList.length){
     toast("No completed tricks to replay yet!",true);
     return;
