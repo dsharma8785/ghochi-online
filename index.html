@@ -80,8 +80,26 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .hukum-black{color:var(--text);}
 
 /* ── TABLE AREA ── */
-.table-area{background:var(--felt);border-bottom:2px solid rgba(255,255,255,.06);position:relative;display:flex;align-items:center;justify-content:center;min-height:220px;padding:12px;}
-.round-table{width:200px;height:140px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#1e5c30,#0e3318);border:4px solid #2d6b3a;box-shadow:0 0 0 6px rgba(0,0,0,.3),0 8px 32px rgba(0,0,0,.5);position:relative;display:flex;align-items:center;justify-content:center;}
+.table-area{
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(0,0,0,.4) 0%, transparent 60%),
+    var(--felt);
+  border-bottom:2px solid rgba(255,255,255,.06);position:relative;display:flex;align-items:center;justify-content:center;min-height:220px;padding:12px;
+}
+.round-table{
+  width:200px;height:140px;border-radius:50%;
+  background:
+    repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,.025) 0px, rgba(255,255,255,.025) 1px, transparent 1px, transparent 3px),
+    radial-gradient(ellipse at 38% 30%,#246b38 0%,#1e5c30 35%,#123e1f 75%,#0a2613 100%);
+  border:4px solid #2d6b3a;
+  box-shadow:
+    inset 0 3px 14px rgba(0,0,0,.55),
+    inset 0 -2px 8px rgba(255,255,255,.04),
+    0 0 0 6px rgba(0,0,0,.3),
+    0 10px 36px rgba(0,0,0,.55);
+  position:relative;display:flex;align-items:center;justify-content:center;
+}
 .table-cards{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;max-width:160px;}
 /* Player seats around table */
 .player-seat{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;}
@@ -103,6 +121,21 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .reaction-emoji-btn:hover{transform:scale(1.25);}
 .floating-reaction{position:absolute;font-size:1.8rem;pointer-events:none;animation:floatUpReaction 1.6s ease-out forwards;}
 @keyframes floatUpReaction{0%{opacity:1;transform:translateY(0) scale(.6);}30%{transform:translateY(-20px) scale(1.2);}100%{opacity:0;transform:translateY(-90px) scale(1);}}
+.floating-chat{
+  position:absolute;pointer-events:none;max-width:160px;
+  background:rgba(22,27,34,.92);border:1.5px solid var(--gold);border-radius:14px;
+  padding:6px 12px;font-size:.78rem;font-weight:700;color:var(--text);
+  white-space:normal;word-break:break-word;text-align:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.5);
+  animation:floatUpChat 3.2s ease-out forwards;
+}
+.floating-chat-sender{display:block;font-size:.62rem;color:var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+@keyframes floatUpChat{
+  0%{opacity:0;transform:translateY(0) scale(.85);}
+  10%{opacity:1;transform:translateY(-8px) scale(1);}
+  80%{opacity:1;transform:translateY(-130px) scale(1);}
+  100%{opacity:0;transform:translateY(-160px) scale(.95);}
+}
 @keyframes hukumFlourish{
   0%{opacity:0;transform:scale(.7) translateY(8px);}
   55%{opacity:1;transform:scale(1.12) translateY(-3px);box-shadow:0 0 22px rgba(201,150,44,.55);}
@@ -115,19 +148,45 @@ input::placeholder{color:var(--muted);font-weight:600;}
   width:72px;height:104px; /* aspect ratio matches the library's native 169.075:244.640 */
   border-radius:6px;
   cursor:pointer;user-select:none;
-  transition:transform .15s,box-shadow .15s;flex-shrink:0;position:relative;
-  box-shadow:0 3px 10px rgba(0,0,0,.5);
+  transition:transform .18s cubic-bezier(.2,.9,.3,1.2),box-shadow .18s ease;flex-shrink:0;position:relative;
+  box-shadow:0 2px 4px rgba(0,0,0,.35),0 6px 14px rgba(0,0,0,.35);
   overflow:hidden;background:#fff;
 }
-.card:hover:not(.disabled){transform:translateY(-10px);box-shadow:0 16px 28px rgba(0,0,0,.6);}
-.card.selected{transform:translateY(-16px);box-shadow:0 20px 36px rgba(245,197,24,.65);outline:2.5px solid var(--gold);}
+.card:hover:not(.disabled){transform:translateY(-10px) scale(1.03);box-shadow:0 4px 8px rgba(0,0,0,.3),0 20px 34px rgba(0,0,0,.55);}
+.card.selected{transform:translateY(-16px) scale(1.04);box-shadow:0 4px 10px rgba(0,0,0,.3),0 22px 40px rgba(245,197,24,.5);outline:2.5px solid var(--gold);}
 .card.disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
-.card-trump{box-shadow:0 0 0 2.5px #f5c518,0 3px 10px rgba(0,0,0,.5)!important;}
+.card-trump{box-shadow:0 2px 4px rgba(0,0,0,.35),0 0 0 2.5px #f5c518,0 0 16px 1px rgba(245,197,24,.35),0 6px 14px rgba(0,0,0,.35)!important;animation:trumpGlow 2.4s ease-in-out infinite;}
+@keyframes trumpGlow{
+  0%,100%{box-shadow:0 2px 4px rgba(0,0,0,.35),0 0 0 2.5px #f5c518,0 0 14px 1px rgba(245,197,24,.3),0 6px 14px rgba(0,0,0,.35);}
+  50%{box-shadow:0 2px 4px rgba(0,0,0,.35),0 0 0 2.5px #f5c518,0 0 22px 4px rgba(245,197,24,.55),0 6px 14px rgba(0,0,0,.35);}
+}
+/* Card landing animation: applied once via JS when a card is freshly placed on the table */
+@keyframes cardLand{
+  0%{transform:translateY(-26px) scale(.85) rotate(-3deg);opacity:0;}
+  60%{transform:translateY(3px) scale(1.02) rotate(.5deg);opacity:1;}
+  100%{transform:translateY(0) scale(1) rotate(0deg);opacity:1;}
+}
+.card-landing{animation:cardLand .38s cubic-bezier(.2,.9,.3,1.3) both;}
 /* Small trick cards */
 .trick-card-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
 .player-name-small{font-size:.65rem;color:var(--muted);font-weight:700;max-width:68px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .trick-winner-label{font-size:.6rem;color:var(--gold);font-weight:800;text-align:center;}
 .card-sm{width:50px;height:72px;border-radius:5px;}
+.card-back-shine{position:relative;}
+.card-back-shine-sweep{
+  position:absolute;inset:0;pointer-events:none;border-radius:inherit;overflow:hidden;
+}
+.card-back-shine-sweep::before{
+  content:'';position:absolute;top:-40%;left:-60%;width:40%;height:180%;
+  background:linear-gradient(75deg,transparent 0%,rgba(255,255,255,.16) 45%,rgba(255,255,255,.28) 50%,rgba(255,255,255,.16) 55%,transparent 100%);
+  transform:rotate(8deg);
+  animation:cardShineSweep 5.5s ease-in-out infinite;
+  animation-delay:calc(var(--shine-delay, 0) * 1s);
+}
+@keyframes cardShineSweep{
+  0%,8%{left:-60%;}
+  35%,100%{left:140%;}
+}
 
 /* ── HAND AREA ── */
 .hand-area{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
@@ -140,6 +199,10 @@ input::placeholder{color:var(--muted);font-weight:600;}
 
 /* ── DECLARE/SCORES TABS ── */
 .declare-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
+#declarations-details summary{list-style:none;display:flex;align-items:center;gap:6px;}
+#declarations-details summary::-webkit-details-marker{display:none;}
+#declarations-details summary::before{content:'▸';display:inline-block;transition:transform .15s;color:var(--gold);}
+#declarations-details[open] summary::before{transform:rotate(90deg);}
 .declare-card h3{font-family:'Baloo 2',cursive;font-size:1.1rem;color:var(--gold);margin-bottom:6px;}
 .declare-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:12px;}
 .declare-table th{background:var(--surface);padding:7px 10px;text-align:left;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:1px;}
@@ -256,6 +319,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
 .chat-panel-open #btn-chat{background:rgba(245,197,24,.2);border-color:var(--gold);color:var(--gold);}
 .chat-unread{position:relative;}
 .chat-unread::after{content:attr(data-count);position:absolute;top:-4px;right:-4px;background:var(--red);color:white;font-size:.55rem;font-weight:800;min-width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0 2px;}
+#btn-ambient.active{background:rgba(245,197,24,.2);border-color:var(--gold);color:var(--gold);}
 
 /* Cards played history strip */
 .cards-played-strip{padding:6px 16px;background:rgba(0,0,0,.2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;overflow-x:auto;min-height:36px;}
@@ -356,7 +420,6 @@ input::placeholder{color:var(--muted);font-weight:600;}
   </div>
   <div class="tabs-mini">
     <button class="tab-mini active" onclick="switchTab('play')" id="tab-play">🎮 Play</button>
-    <button class="tab-mini" onclick="switchTab('declare')" id="tab-declare">📋 Declare</button>
     <button class="tab-mini" onclick="switchTab('scores')" id="tab-scores">🏆 Scores</button>
   </div>
 
@@ -385,6 +448,36 @@ input::placeholder{color:var(--muted);font-weight:600;}
         <button class="btn btn-sm" id="btn-redeal" style="background:rgba(155,89,182,.3);color:#c39bd3;border:1.5px solid rgba(155,89,182,.5);border-radius:50px;font-weight:800;white-space:nowrap;" onclick="requestRedeal()">🔀 Request Redeal</button>
       </div>
     </div>
+
+    <!-- DECLARE — merged onto the Play tab so players don't have to switch tabs to declare -->
+    <div style="padding:8px 16px 0;">
+      <div id="my-declare-section" style="display:none;">
+        <div class="declare-card">
+          <h3>📢 Your Declaration</h3>
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;">How many tricks will your team win?</p>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <div class="blind-toggle-row" style="flex:1;min-width:160px;margin-bottom:0;" onclick="toggleBlind()">
+              <div class="toggle-track" id="blind-track"><div class="toggle-thumb"></div></div>
+              <div class="toggle-text"><strong>🙈 Blind Game</strong><span>Declare ≥5, win = 2× points!</span></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btn-reveal" onclick="revealMyCards()" style="white-space:nowrap;">👁 Reveal My Cards</button>
+          </div>
+          <label style="font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Declare Sar/Hath</label>
+          <input type="number" id="declare-input" min="2" max="13" placeholder="2–13"/>
+          <button class="btn btn-gold btn-full" style="margin-top:14px;" onclick="submitDeclaration()">Submit Declaration</button>
+        </div>
+      </div>
+      <details id="declarations-details" style="margin-bottom:4px;">
+        <summary style="cursor:pointer;font-size:.78rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 2px;">📋 All Declarations</summary>
+        <div class="declare-card" style="margin-top:6px;">
+          <table class="declare-table">
+            <thead><tr><th>Team</th><th>Declared</th><th>Blind</th><th>Made</th></tr></thead>
+            <tbody id="declarations-tbody"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
     <div class="hand-area">
       <div class="hand-label">
         <span>MY CARDS (<span id="hand-count">13</span>)</span>
@@ -397,6 +490,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
       <button class="btn btn-ghost btn-sm" onclick="sortHand()">Sort ♥♦♣♠</button>
       <button class="btn btn-ghost btn-sm" id="btn-chat" onclick="toggleChat()">💬 Chat</button>
       <button class="btn btn-ghost btn-sm" id="btn-react" onclick="toggleReactionPicker()">😄 React</button>
+      <button class="btn btn-ghost btn-sm" id="btn-ambient" onclick="toggleAmbient()" title="Optional ambient room tone">🔈 Ambience</button>
       <div id="reaction-picker" style="display:none;position:absolute;bottom:54px;right:16px;background:var(--card);border:1.5px solid var(--border);border-radius:50px;padding:8px 10px;display:flex;gap:6px;box-shadow:var(--shadow);z-index:20;">
         <span class="reaction-emoji-btn" onclick="sendReaction('😂')">😂</span>
         <span class="reaction-emoji-btn" onclick="sendReaction('🔥')">🔥</span>
@@ -420,30 +514,6 @@ input::placeholder{color:var(--muted);font-weight:600;}
           onkeydown="if(event.key==='Enter')sendChat()" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/>
         <button class="btn btn-gold btn-sm" onclick="sendChat()" style="border-radius:20px;padding:6px 14px;">Send</button>
       </div>
-    </div>
-  </div>
-
-  <!-- DECLARE TAB -->
-  <div id="gtab-declare" style="display:none;overflow-y:auto;padding:16px;flex:1;">
-    <div id="my-declare-section" style="display:none;">
-      <div class="declare-card">
-        <h3>📢 Your Declaration</h3>
-        <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;">How many tricks will your team win?</p>
-        <div class="blind-toggle-row" onclick="toggleBlind()">
-          <div class="toggle-track" id="blind-track"><div class="toggle-thumb"></div></div>
-          <div class="toggle-text"><strong>🙈 Blind Game</strong><span>Declare ≥5, win = 2× points!</span></div>
-        </div>
-        <label style="font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Declare Sar/Hath</label>
-        <input type="number" id="declare-input" min="2" max="13" placeholder="2–13"/>
-        <button class="btn btn-gold btn-full" style="margin-top:14px;" onclick="submitDeclaration()">Submit Declaration</button>
-      </div>
-    </div>
-    <div class="declare-card">
-      <h3>📋 All Declarations</h3>
-      <table class="declare-table">
-        <thead><tr><th>Team</th><th>Declared</th><th>Blind</th><th>Made</th></tr></thead>
-        <tbody id="declarations-tbody"></tbody>
-      </table>
     </div>
   </div>
 
@@ -589,6 +659,10 @@ function libCardId(rank,suit){
 // ── STATE ──
 let myName="",myId="",roomCode="",roomRef=null,isHost=false;
 let gameState=null,selectedCard=null,blindOn=false,handSorted=false,hasViewedHand=false;
+// Tracks which "pid:cardId" entries have already been rendered on the table this trick,
+// so the card-landing animation only plays once per card (not on every Firebase snapshot
+// re-render) — purely cosmetic, reset whenever the trick area is empty (new trick).
+let _renderedTrickCardKeys=new Set();
 let unsubscribe=null,prevRound=null,prevPhase=null,botMode="none";
 let trickWinTimeout=null,botTickInterval=null;
 const shownRounds=new Set();
@@ -690,6 +764,39 @@ function playCardSound(type){
   }catch(e){}
 }
 
+// ── AMBIENT ROOM TONE ── optional, OFF by default. A very quiet, filtered-noise "room
+// presence" loop for a touch of extra atmosphere — purely additive, never autoplays,
+// and never overlaps/replaces any of the existing card sound effects above.
+let _ambientNodes=null,ambientOn=false;
+function startAmbient(){
+  if(_ambientNodes)return;
+  try{
+    const ctx=getAudioCtx();
+    const bufSec=4;
+    const buf=ctx.createBuffer(1,ctx.sampleRate*bufSec,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1);
+    const src=ctx.createBufferSource();
+    src.buffer=buf;src.loop=true;
+    const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=420;
+    const gain=ctx.createGain();gain.gain.value=0.018; // intentionally very quiet
+    src.connect(lp);lp.connect(gain);gain.connect(ctx.destination);
+    src.start();
+    _ambientNodes={src,gain};
+  }catch(e){}
+}
+function stopAmbient(){
+  if(!_ambientNodes)return;
+  try{_ambientNodes.src.stop();}catch(e){}
+  _ambientNodes=null;
+}
+window.toggleAmbient=function(){
+  ambientOn=!ambientOn;
+  if(ambientOn)startAmbient();else stopAmbient();
+  const btn=document.getElementById("btn-ambient");
+  if(btn)btn.classList.toggle("active",ambientOn);
+};
+
 // ── DECK ──
 function buildDeck(){const d=[];for(const s of ALL_SUITS)for(const r of RANKS)d.push(r+s);return d;}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -723,8 +830,9 @@ function makeCardEl(cid,opts={}){
     // Using the library's detailed "back" design (not "alternate-back") since this game
     // only ever renders face-down cards for the player's own hand (max ~13 at once),
     // well within the performance range where the detailed back is fine to use.
-    el.className=sz;
-    el.innerHTML=`<svg viewBox="0 0 169.075 244.640" style="width:100%;height:100%;display:block;border-radius:inherit;"><use xlink:href="#back" x="0" y="0" width="100%" height="100%"/></svg>`;
+    el.className=sz+" card-back-shine";
+    el.style.setProperty("--shine-delay",(Math.random()*5).toFixed(2));
+    el.innerHTML=`<svg viewBox="0 0 169.075 244.640" style="width:100%;height:100%;display:block;border-radius:inherit;"><use xlink:href="#back" x="0" y="0" width="100%" height="100%"/></svg><div class="card-back-shine-sweep"></div>`;
     return el;
   }
 
@@ -891,12 +999,11 @@ function listenRoom(){
         dealShown=true;
         hasViewedHand=false;
         blindOn=false;
+        resetRevealButton();
         prevTrickHistoryLen=(state.trickHistory||[]).length;
         showDealAnimation(()=>{
           showScreen("game");
           renderGame(state);
-          // Auto-switch to Declare tab so players declare immediately
-          switchTab("declare");
           toast("📋 Declare your Sar/Hath before playing!");
           playTrumpFlourish();
         });
@@ -931,12 +1038,11 @@ function listenRoom(){
         prevTrickHistoryLen=0;
         hasViewedHand=false;
         blindOn=false;
+        resetRevealButton();
         if(state.round>1){
           setTimeout(()=>{
             showDealAnimation(()=>{
               renderGame(state);
-              // Auto-switch to Declare tab so players can't peek at Play tab before declaring
-              switchTab("declare");
               toast("📋 Declare your Sar/Hath before playing!");
               playTrumpFlourish();
             });
@@ -1166,11 +1272,17 @@ function renderTableArea(state){
   const trickCon=document.getElementById("trick-cards-display");
   trickCon.innerHTML="";
   const trickWinner=state.lastTrickWinner;
-  Object.entries(cards).forEach(([pid,cid])=>{
-    if(!cid||pid==="placeholder")return;
+  const playedEntries=Object.entries(cards).filter(([pid,cid])=>cid&&pid!=="placeholder");
+  if(playedEntries.length===0)_renderedTrickCardKeys.clear(); // new trick starting — reset
+  playedEntries.forEach(([pid,cid])=>{
     const wrap=document.createElement("div");wrap.className="trick-card-wrap";
     const cardEl=makeCardEl(cid,{small:true});
     cardEl.style.cursor="default";
+    const key=pid+":"+cid;
+    if(!_renderedTrickCardKeys.has(key)){
+      _renderedTrickCardKeys.add(key);
+      cardEl.classList.add("card-landing");
+    }
     const pname=players[pid]?.name||"?";
     const nameEl=document.createElement("div");nameEl.className="player-name-small";nameEl.textContent=pname;
     wrap.appendChild(cardEl);wrap.appendChild(nameEl);
@@ -2088,29 +2200,43 @@ window.newGame=function(){
   });
 };
 
-// ── TABS ──
+// ── TABS ── (Play+Declare merged into one screen; only "play" and "scores" remain)
 window.switchTab=function(tab){
-  ["play","declare","scores"].forEach(t=>{
+  ["play","scores"].forEach(t=>{
     document.getElementById("tab-"+t).classList.toggle("active",t===tab);
     const el=document.getElementById("gtab-"+t);
     el.style.display=t===tab?(t==="play"?"flex":"block"):"none";
     if(t==="play"&&t===tab)el.style.flexDirection="column";
   });
-  if(tab==="play"&&!hasViewedHand){
-    hasViewedHand=true;
-    // Player has now seen their cards — blind declaration is no longer allowed
-    if(blindOn){
-      blindOn=false;
-      const track=document.getElementById("blind-track");
-      if(track)track.classList.remove("on");
-      const inp=document.getElementById("declare-input");
-      if(inp)inp.min=2;
-      toast("Blind disabled — you've seen your cards!",true);
-    }
-    // Re-render immediately so the real cards replace the face-down placeholders
-    // right away, instead of waiting for the next Firebase snapshot.
-    if(gameState)renderHand(gameState.hands?.[myId]||[],gameState);
+};
+
+// Explicit "Reveal my cards" action — replaces the old switchTab('play')-triggered reveal
+// now that Play and Declare share one screen. Cards stay face-down (and Blind stays
+// available) until the player deliberately clicks Reveal.
+// Resets the Reveal button back to its clickable state — called whenever hasViewedHand
+// is reset to false at the start of a new round.
+function resetRevealButton(){
+  const btn=document.getElementById("btn-reveal");
+  if(btn){btn.disabled=false;btn.textContent="👁 Reveal My Cards";}
+}
+
+window.revealMyCards=function(){
+  if(hasViewedHand)return;
+  hasViewedHand=true;
+  // Player has now seen their cards — blind declaration is no longer allowed
+  if(blindOn){
+    blindOn=false;
+    const track=document.getElementById("blind-track");
+    if(track)track.classList.remove("on");
+    const inp=document.getElementById("declare-input");
+    if(inp)inp.min=2;
+    toast("Blind disabled — you've seen your cards!",true);
   }
+  const btn=document.getElementById("btn-reveal");
+  if(btn){btn.disabled=true;btn.textContent="👁 Cards Revealed";}
+  // Re-render immediately so the real cards replace the face-down placeholders
+  // right away, instead of waiting for the next Firebase snapshot.
+  if(gameState)renderHand(gameState.hands?.[myId]||[],gameState);
 };
 window.sortHand=function(){
   handSorted=!handSorted;
@@ -2190,13 +2316,27 @@ function listenChat(){
     const entries=Object.values(snap.val()||{}).sort((a,b)=>a.ts-b.ts);
     entries.forEach(m=>{
       const isMe=m.pid===myId;
-      const isNew=m.ts>lastChatTs&&!isMe;
+      const isNew=m.ts>lastChatTs;
       const div=document.createElement("div");
       div.className="chat-msg "+(isMe?"mine":"theirs");
       div.innerHTML=`<span class="chat-sender">${isMe?"You":m.name}</span>
         <div class="chat-bubble">${escHtml(m.text)}</div>`;
       msgs.appendChild(div);
-      if(isNew&&!chatOpen){
+      if(isNew){
+        // Float the message upward over the table for everyone to see, same treatment
+        // as the reaction emojis — not just visible inside the (often-closed) chat panel.
+        const overlay=document.getElementById("reaction-overlay");
+        if(overlay){
+          const bubble=document.createElement("div");
+          bubble.className="floating-chat";
+          bubble.innerHTML=`<span class="floating-chat-sender">${isMe?"You":escHtml(m.name)}</span>${escHtml(m.text)}`;
+          bubble.style.left=(20+Math.random()*40)+"%";
+          bubble.style.bottom="10px";
+          overlay.appendChild(bubble);
+          setTimeout(()=>bubble.remove(),3200);
+        }
+      }
+      if(isNew&&!isMe&&!chatOpen){
         chatUnread++;
         playCardSound("chat");
         const btn=document.getElementById("btn-chat");
