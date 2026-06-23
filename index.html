@@ -544,7 +544,7 @@ input::placeholder{color:var(--muted);font-weight:600;}
   <div class="modal-box">
     <h2>Round Complete! 🎴</h2>
     <div id="round-result-body"></div>
-    <button class="btn btn-gold btn-full" style="margin-top:14px;" onclick="document.getElementById('round-result-modal').classList.remove('show')">Next Round →</button>
+    <button class="btn btn-gold btn-full" id="round-result-next-btn" style="margin-top:14px;">Next Round →</button>
   </div>
 </div>
 <div class="modal-bg" id="full-scores-modal">
@@ -664,7 +664,7 @@ let gameState=null,selectedCard=null,blindOn=false,handSorted=false,hasViewedHan
 // re-render) — purely cosmetic, reset whenever the trick area is empty (new trick).
 let _renderedTrickCardKeys=new Set();
 let unsubscribe=null,prevRound=null,prevPhase=null,botMode="none";
-let trickWinTimeout=null,botTickInterval=null;
+let trickWinTimeout=null,botTickInterval=null,roundResultFallbackTimer=null;
 const shownRounds=new Set();
 let blockPlay=false; // blocks input during trick-win animation
 
@@ -1027,26 +1027,34 @@ function listenRoom(){
         }
       }
       renderRedealModal(state);
-      if(prevRound!==null&&state.round!==prevRound&&state.roundResult&&!shownRounds.has(state.round)){
-        shownRounds.add(state.round);
-        // Delay round result until trick overlay clears
-        setTimeout(()=>showRoundResult(state),blockPlay?3200:0);
-      }
-      // Reset prevTrickWinner/prevTrickHistoryLen on new round; show deal animation for new round
+      // Reset prevTrickWinner/prevTrickHistoryLen on new round; show round result THEN deal
+      // animation for the new round, strictly in that order — the shuffle/deal must not
+      // start until the player has actually seen (and dismissed) the round result, not on
+      // a disconnected fixed timer that could race ahead of the modal.
       if(prevRound!==null&&state.round!==prevRound){
         prevTrickWinner=null;
         prevTrickHistoryLen=0;
         hasViewedHand=false;
         blindOn=false;
         resetRevealButton();
-        if(state.round>1){
-          setTimeout(()=>{
+        const startNextRoundDeal=()=>{
+          if(state.round>1){
             showDealAnimation(()=>{
               renderGame(state);
               toast("📋 Declare your Sar/Hath before playing!");
               playTrumpFlourish();
             });
-          },2600); // after round result modal delay
+          }
+        };
+        if(state.roundResult&&!shownRounds.has(state.round)){
+          shownRounds.add(state.round);
+          // Delay showing the result modal until any trick-win overlay has cleared
+          setTimeout(()=>{
+            showRoundResult(state,startNextRoundDeal);
+          },blockPlay?3200:0);
+        }else if(state.round>1){
+          // No new round-result to show (e.g. reconnecting mid-round) — proceed directly
+          startNextRoundDeal();
         }
       }
       // Bot declarations (Sar/Hath) — must happen before bots can play tricks
@@ -1353,6 +1361,20 @@ function renderHand(cards,state){
   const con=document.getElementById("my-hand-cards");
   con.innerHTML="";
   if(!cards.length){return;}
+  // Auto-reveal: once it's genuinely this player's turn to play, they MUST be able to see
+  // their cards to do so — blind only affects the declaration's risk/reward (already
+  // recorded in Firebase at submission time, independent of this local flag), it was never
+  // meant to leave a player permanently unable to view or play their own hand.
+  const myTurnNow=state.currentTrick?.turn===myId;
+  if(!hasViewedHand&&myTurnNow){
+    hasViewedHand=true;
+    const track=document.getElementById("blind-track");
+    if(track)track.classList.remove("on");
+    const inp=document.getElementById("declare-input");
+    if(inp)inp.min=2;
+    const btn=document.getElementById("btn-reveal");
+    if(btn){btn.disabled=true;btn.textContent="👁 Cards Revealed";}
+  }
   if(!hasViewedHand){
     // Cards not yet viewed this round — show face-down placeholders only.
     // This prevents seeing ranks/suits via the DOM before committing to (or against) a blind declaration.
@@ -2080,7 +2102,7 @@ function renderScoresTab(state){
 }
 
 // ── ROUND RESULT MODAL ──
-function showRoundResult(state){
+function showRoundResult(state,onDismiss){
   const body=document.getElementById("round-result-body");
   const teams=state.teams||[];
   body.innerHTML=Object.entries(state.roundResult?.teamResults||{}).map(([ti,res])=>`
@@ -2094,6 +2116,21 @@ function showRoundResult(state){
       </div>
     </div>`).join("");
   document.getElementById("round-result-modal").classList.add("show");
+
+  // The next round's shuffle/deal must not begin until this modal is actually dismissed —
+  // either by the player clicking "Next Round →", or after a fallback timeout (so the game
+  // doesn't stall forever if nobody's there to click, e.g. all-bot seats, or the player
+  // stepped away). Whichever happens first fires onDismiss exactly once.
+  let dismissed=false;
+  const fire=()=>{
+    if(dismissed)return;
+    dismissed=true;
+    document.getElementById("round-result-modal").classList.remove("show");
+    if(onDismiss)onDismiss();
+  };
+  document.getElementById("round-result-next-btn").onclick=fire;
+  if(roundResultFallbackTimer)clearTimeout(roundResultFallbackTimer);
+  roundResultFallbackTimer=setTimeout(fire,6000); // fallback if nobody clicks the button
 }
 
 // ── WINNER ──
