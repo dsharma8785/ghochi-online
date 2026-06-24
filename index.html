@@ -1361,19 +1361,19 @@ function renderHand(cards,state){
   const con=document.getElementById("my-hand-cards");
   con.innerHTML="";
   if(!cards.length){return;}
-  // Auto-reveal: once it's genuinely this player's turn to play, they MUST be able to see
-  // their cards to do so — blind only affects the declaration's risk/reward (already
-  // recorded in Firebase at submission time, independent of this local flag), it was never
-  // meant to leave a player permanently unable to view or play their own hand.
-  const myTurnNow=state.currentTrick?.turn===myId;
-  if(!hasViewedHand&&myTurnNow){
-    hasViewedHand=true;
-    const track=document.getElementById("blind-track");
-    if(track)track.classList.remove("on");
-    const inp=document.getElementById("declare-input");
-    if(inp)inp.min=2;
-    const btn=document.getElementById("btn-reveal");
-    if(btn){btn.disabled=true;btn.textContent="👁 Cards Revealed";}
+  // Reveal is ALWAYS an explicit player action — never automatic. The only thing that
+  // changes here is whether the Reveal button is currently allowed to be clicked:
+  //  - Before declaring: always allowed (player may look, then declare normally).
+  //  - If the player has toggled Blind but not yet submitted: Reveal is LOCKED, so they
+  //    can't peek and undermine the blind commitment they're about to make.
+  //  - Once their declaration is submitted (blind or normal): Reveal unlocks again so they
+  //    can choose to look — they still must click it themselves; cards never auto-flip.
+  const hasDeclared=!!(state.declarations||{})[myId];
+  const revealBtn=document.getElementById("btn-reveal");
+  if(revealBtn&&!hasViewedHand){
+    const lockedForBlindCommitment=blindOn&&!hasDeclared;
+    revealBtn.disabled=lockedForBlindCommitment;
+    revealBtn.title=lockedForBlindCommitment?"Submit your blind declaration first, then you can reveal to play.":"";
   }
   if(!hasViewedHand){
     // Cards not yet viewed this round — show face-down placeholders only.
