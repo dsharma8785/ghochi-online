@@ -460,12 +460,17 @@ input::placeholder{color:var(--muted);font-weight:600;}
               <div class="toggle-track" id="blind-track"><div class="toggle-thumb"></div></div>
               <div class="toggle-text"><strong>🙈 Blind Game</strong><span>Declare ≥5, win = 2× points!</span></div>
             </div>
-            <button class="btn btn-ghost btn-sm" id="btn-reveal" onclick="revealMyCards()" style="white-space:nowrap;">👁 Reveal My Cards</button>
           </div>
           <label style="font-size:.72rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Declare Sar/Hath</label>
           <input type="number" id="declare-input" min="2" max="13" placeholder="2–13"/>
           <button class="btn btn-gold btn-full" style="margin-top:14px;" onclick="submitDeclaration()">Submit Declaration</button>
         </div>
+      </div>
+      <!-- Reveal lives OUTSIDE my-declare-section on purpose: that section hides itself once
+           the player's team has declared, but Reveal must stay reachable after that point too
+           (e.g. a blind-declaring player still needs to reveal afterward to actually play). -->
+      <div id="my-reveal-section" style="display:none;margin-bottom:10px;">
+        <button class="btn btn-ghost btn-full" id="btn-reveal" onclick="revealMyCards()">👁 Reveal My Cards</button>
       </div>
       <details id="declarations-details" style="margin-bottom:4px;">
         <summary style="cursor:pointer;font-size:.78rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 2px;">📋 All Declarations</summary>
@@ -1369,7 +1374,9 @@ function renderHand(cards,state){
   //  - Once their declaration is submitted (blind or normal): Reveal unlocks again so they
   //    can choose to look — they still must click it themselves; cards never auto-flip.
   const hasDeclared=!!(state.declarations||{})[myId];
+  const revealSection=document.getElementById("my-reveal-section");
   const revealBtn=document.getElementById("btn-reveal");
+  if(revealSection)revealSection.style.display=hasViewedHand?"none":"block";
   if(revealBtn&&!hasViewedHand){
     const lockedForBlindCommitment=blindOn&&!hasDeclared;
     revealBtn.disabled=lockedForBlindCommitment;
